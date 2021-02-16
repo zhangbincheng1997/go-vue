@@ -1,14 +1,21 @@
-# GO 配置
+# go-vue
 
-## vscode 插件
+## GO
+
+### 环境变量
+
+- GOROOT=D:\Go\
+- path + %GOROOT%\bin
+- GO111MODULE=on
+- GOPROXY=https://goproxy.cn
+
+### vscode 配置
 
 1. Go
 2. CodeRunner
+3. ctrl+shift+p > Go: Install/Update Tools
 
-## Go 开发包
-
-ctrl+shift+p > Go: Install/Update Tools
-
+```Comment
 1. gocode (Auto-completion, does not work with modules)
 2. gopkgs (Auto-completion of unimported packages && Add Import feature)
 3. go-outline (Go to symbol in file)
@@ -26,22 +33,12 @@ ctrl+shift+p > Go: Install/Update Tools
 15. godef (Go to definition)
 16. goreturns (Formatter)
 17. golint (Linter)
-
-```Shell
-gopkgs 安装失败：
-> go get -v github.com/uudashr/gopkgs/cmd/gopkgs
 ```
 
-## 环境变量
-
-- GOROOT=D:\Go\
-- path + %GOROOT%\bin
-- GO111MODULE=on
-- GOPROXY=https://goproxy.cn
-
-## 报错处理
+## Web框架
 
 ```Shell
-go: cannot find main module; see 'go help modules'
-> go mod init main
+# Web框架
+$ go get -u github.com/gin-gonic/gin
+$ go get -u github.com/go-sql-driver/mysql
 ```
