@@ -2,62 +2,77 @@ package main
 
 import (
 	"context"
-	"database/sql"
+	"encoding/csv"
 	"fmt"
-	"log"
+	"io"
 	"net/http"
-	"strconv"
+	"os"
+	"path"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB = InitMySQL()
-var collection *mongo.Collection = InitMongoDB()
+var logger = InitLogger()
+var db *gorm.DB = InitMySQL()
+var database *mongo.Database = InitMongoDB()
+var collection *mongo.Collection = database.Collection(TEXT)
+var idGenerator *mongo.Collection = database.Collection(IDGENERATOR)
 
-func getStatus(c *gin.Context) {
-	c.JSON(http.StatusOK, statusOptions)
+func success(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, gin.H{
+		"code":    20000,
+		"message": "ok",
+		"data":    data,
+	})
 }
 
-func getList(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	offset := (page - 1) * limit
-	rows, err := db.Query("SELECT * FROM t_user limit ?,?", offset, limit)
-	if err != nil {
-		panic(err)
-	}
-	list := make([]User, 0)
-	var user User
-	for rows.Next() {
-		rows.Scan(&user.ID, &user.Username, &user.Password)
-		list = append(list, user)
-	}
-	c.JSON(http.StatusOK, list)
+func failure(c *gin.Context, message interface{}) {
+	c.JSON(http.StatusOK, gin.H{
+		"code":    20000,
+		"message": message,
+	})
+}
+
+func info(c *gin.Context) {
+	user := make(map[string]interface{})
+	user["roles"] = "admin"
+	user["introduction"] = "I am a superadministrator"
+	user["avatar"] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
+	user["name"] = "Super Admin"
+	success(c, user)
+}
+
+func login(c *gin.Context) {
+	// username := c.Request.FormValue("username")
+	// password := c.Request.FormValue("password")
+	// ret, _ := db.Exec("INSERT INTO t_user (username, password) VALUES (?, ?)", username, password)
+	success(c, "token...")
+}
+
+func logout(c *gin.Context) {
+	success(c, "")
 }
 
 func register(c *gin.Context) {
 	username := c.Request.FormValue("username")
 	password := c.Request.FormValue("password")
 	ret, _ := db.Exec("INSERT INTO t_user (username, password) VALUES (?, ?)", username, password)
-	lastInsertID, _ := ret.LastInsertId()
 	rowsAffected, _ := ret.RowsAffected()
-	c.JSON(http.StatusOK, gin.H{
-		"lastInsertID": lastInsertID,
-		"rowsAffected": rowsAffected,
-	})
+	success(c, rowsAffected)
 }
 
 func deleteUser(c *gin.Context) {
 	id := c.Param("id")
 	ret, _ := db.Exec("DELETE FROM t_user WHERE id = ?", id)
 	rowsAffected, _ := ret.RowsAffected()
-	c.JSON(http.StatusOK, gin.H{
-		"rowsAffected": rowsAffected,
-	})
+	success(c, rowsAffected)
 }
 
 func updatePassword(c *gin.Context) {
@@ -65,146 +80,259 @@ func updatePassword(c *gin.Context) {
 	password := c.Request.FormValue("password")
 	ret, _ := db.Exec("UPDATE t_user SET password = ? WHERE username = ?", password, username)
 	rowsAffected, _ := ret.RowsAffected()
-	c.JSON(http.StatusOK, gin.H{
-		"rowsAffected": rowsAffected,
-	})
+	success(c, rowsAffected)
 }
 
-func getItemList(c *gin.Context) {
-	page, _ := strconv.ParseInt(c.DefaultQuery("page", "1"), 10, 64)
-	limit, _ := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
-	sort, _ := strconv.ParseInt(c.DefaultQuery("sort", "1"), 10, 64)
-	offset := (page - 1) * limit
-	keyword := c.Query("keyword")
+func getNextID(collection string) int {
+	var generator Generator
+	filter := bson.M{"collection": collection}
+	update := bson.M{"$inc": bson.M{"id": 1}}
+	opts := options.FindOneAndUpdate().SetUpsert(true)
+	err := idGenerator.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&generator)
+	if err != nil {
+		logger.Info(fmt.Sprint(err))
+		panic(err)
+	}
+	return generator.ID
+}
+
+func getList(c *gin.Context) {
+	var req PageReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	logger.Info(fmt.Sprintf("%v", req))
+	offset := (req.Page - 1) * req.Limit
 	filter := bson.M{}
-	if len(keyword) > 0 {
-		filter["text"] = bson.M{"$regex": keyword}
+	if req.Status != 0 {
+		filter[req.Language+".status"] = req.Status
+	}
+	if len(req.Keyword) > 0 {
+		filter["text"] = bson.M{"$regex": req.Keyword}
 	}
 	findOptions := options.Find()
-	findOptions.SetSort(bson.M{"id": sort})
-	findOptions.SetLimit(limit)
+	if req.Sort != 0 {
+		findOptions.SetSort(bson.M{"id": req.Sort})
+	}
+	findOptions.SetLimit(req.Limit)
 	findOptions.SetSkip(offset)
-	res, err := collection.Find(context.TODO(), filter, findOptions)
+	count, _ := database.Collection(req.Table).CountDocuments(context.TODO(), filter)
+	res, _ := database.Collection(req.Table).Find(context.TODO(), filter, findOptions)
 
 	list := make([]bson.M, 0)
 	for res.Next(context.TODO()) {
 		var item bson.M
 		err := res.Decode(&item)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		list = append(list, item)
 	}
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"result": list,
+	success(c, gin.H{
+		"list":  list,
+		"count": count,
 	})
 }
 
-func addItem(c *gin.Context) { // 添加条目
-	id, _ := strconv.Atoi(c.Request.FormValue("id"))
-	text := c.Request.FormValue("text")
-	property := c.Request.FormValue("property")
-	item := bson.M{ // 未翻译
-		"id":       id,
-		"text":     text,
-		"property": property,
-	}
-	res, err := collection.InsertOne(context.TODO(), item)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	insertedID := res.InsertedID
-	c.JSON(http.StatusOK, gin.H{
-		"insertedID": insertedID,
-	})
+func getStatus(c *gin.Context) {
+	success(c, statusOptions)
 }
 
-func addResult(c *gin.Context) { // 添加翻译
-	id := c.Request.FormValue("id")
-	language := c.Request.FormValue("language")
-	text := c.Request.FormValue("text")
-	filter := bson.M{"id": id} // 翻译
+func updateText(c *gin.Context) { // 添加翻译
+	var req UpdateTextReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	filter := bson.M{"id": req.ID} // 翻译
 	update := bson.M{
-		"$set": bson.M{
-			language + ".text":   text,
-			language + ".status": WAITING,
-		},
+		"$set": bson.M{"text": req.Text},
 	}
-	res, err := collection.UpdateOne(context.TODO(), filter, update)
+	res, err := database.Collection(req.Table).UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 	modifiedCount := res.ModifiedCount
-	c.JSON(http.StatusOK, gin.H{
-		"modifiedCount": modifiedCount,
-	})
+	success(c, modifiedCount)
+}
+
+func updateRecordText(c *gin.Context) { // 添加翻译
+	var req UpdateTextReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	filter := bson.M{"id": req.ID} // 翻译
+	update := bson.M{
+		"$set": bson.M{
+			req.Language + ".text":   req.Text,
+			req.Language + ".status": WAITING,
+		},
+	}
+	res, err := database.Collection(req.Table).UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		panic(err)
+	}
+	modifiedCount := res.ModifiedCount
+	success(c, modifiedCount)
 }
 
 func updateStatus(c *gin.Context) {
-	// ids := c.PostFormArray("ids") // TODO
-	ids := [...]int{1, 2}
-	language := c.Request.FormValue("language")
-	status := c.Request.FormValue("status")
+	var req StatusReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
 	filter := bson.M{
-		"id": bson.M{"$in": ids},
+		"id": bson.M{"$in": req.Ids},
 	}
 	update := bson.M{
 		"$set": bson.M{
-			language + ".status": status,
+			req.Language + ".status": req.Status,
 		},
 	}
-	res, err := collection.UpdateOne(context.TODO(), filter, update)
+	res, err := database.Collection(req.Table).UpdateMany(context.TODO(), filter, update)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 	modifiedCount := res.ModifiedCount
-	c.JSON(http.StatusOK, gin.H{
-		"modifiedCount": modifiedCount,
-	})
+	success(c, modifiedCount)
 }
 
 func deleteItem(c *gin.Context) {
-	var ids []int
-	c.ShouldBindJSON(&ids)
-	filter := bson.M{
-		"id": bson.M{"$in": ids},
-	}
-	res, err := collection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		fmt.Println(err)
+	var req DeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
 		return
 	}
+	filter := bson.M{
+		"id": bson.M{"$in": req.Ids},
+	}
+	res, err := database.Collection(req.Table).DeleteMany(context.TODO(), filter)
+	if err != nil {
+		panic(err)
+	}
 	deletedCount := res.DeletedCount
-	c.JSON(http.StatusOK, gin.H{
-		"deletedCount": deletedCount,
-	})
+	success(c, deletedCount)
+}
+
+func importData(c *gin.Context) {
+	file, _ := c.FormFile("file")
+	table := c.Request.FormValue("table")
+	csvFile, _ := file.Open()
+	defer csvFile.Close()
+	r := csv.NewReader(csvFile)
+
+	// 解析CSV
+	var list []interface{}
+	for {
+		line, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		text := line[0]
+		property := line[1]
+		item := bson.M{
+			"id":       getNextID(table),
+			"text":     text,
+			"property": property,
+		}
+		list = append(list, item)
+	}
+	res, err := database.Collection(table).InsertMany(context.TODO(), list)
+	if err != nil {
+		panic(err)
+	}
+	insertedIDs := res.InsertedIDs
+	success(c, insertedIDs)
+}
+
+func exportData(c *gin.Context) {
+	table := c.Query("table")
+	language := c.Query("language")
+	logger.Info(table + " " + language)
+	dir := "data"
+	_filename := "data.csv"
+	filename := path.Join(dir, _filename)
+	file, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	file.WriteString("\xEF\xBB\xBF") // UTF-8 BOM
+	w := csv.NewWriter(file)
+
+	filter := bson.M{}
+	findOptions := options.Find()
+	findOptions.SetSort(bson.M{"id": 1})
+	res, _ := database.Collection(table).Find(context.TODO(), filter, findOptions)
+
+	data := [][]string{}
+	for res.Next(context.TODO()) {
+		var item map[string]interface{}
+		err := res.Decode(&item)
+		if err != nil {
+			panic(err)
+		}
+		content := []string{}
+		content = append(content, fmt.Sprint(item["id"].(int32)))
+		content = append(content, item["text"].(string))
+		content = append(content, item["property"].(string))
+		l := item[language].(map[string]interface{})
+		if l["text"] != nil {
+			content = append(content, l["text"].(string))
+		} else {
+			content = append(content, "")
+		}
+		if l["status"] != nil {
+			content = append(content, statusMap[l["status"].(int32)])
+		} else {
+			content = append(content, "")
+		}
+		data = append(data, content)
+	}
+	w.WriteAll(data)
+	w.Flush()
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", _filename))
+	c.Writer.Header().Add("Content-Type", "application/octet-stream")
+	c.File(filename)
 }
 
 func main() {
 	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           24 * time.Hour,
+	}))
+	// r.Use(cors.Default())
+
 	userV1 := r.Group("/v1/user")
 	{
-		userV1.GET("/list", getList)
-		userV1.POST("/", register)
+		userV1.GET("/info", info)
+		userV1.POST("/login", login)
+		userV1.POST("/logout", logout)
+		userV1.POST("/register", register)
 		userV1.DELETE("/:id", deleteUser)
-		userV1.PUT("/", updatePassword)
+		userV1.PUT("/password", updatePassword)
 	}
 	itemV1 := r.Group("/v1/item")
 	{
-		itemV1.GET("/", getItemList)
-		itemV1.POST("/", addItem)
-		itemV1.POST("/result", addResult)
-		itemV1.POST("/status", updateStatus)
-		itemV1.DELETE("/", deleteItem)
-		// importData
-		// exportData
+		itemV1.GET("/list", getList)
+		itemV1.GET("/status", getStatus)
+		itemV1.PUT("/text", updateText)
+		itemV1.PUT("/record/text", updateRecordText)
+		itemV1.PUT("/status", updateStatus)
+		itemV1.DELETE("", deleteItem)
+		itemV1.POST("/import", importData)
+		itemV1.GET("/export", exportData)
 	}
+
 	r.Run(":8080")
 }

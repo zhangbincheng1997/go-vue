@@ -38,7 +38,16 @@
 ## Web框架
 
 ```Shell
+# go get -u 强制使用网络更新
+
 # Web框架
 $ go get -u github.com/gin-gonic/gin
+$ go get -u github.com/gin-contrib/cors
+# 数据库
 $ go get -u github.com/go-sql-driver/mysql
+$ go get -u go.mongodb.org/mongo-driver/mongo
+$ go get -u gorm.io/gorm
+$ go get -u gorm.io/driver/mysql
+# 热更新
+$ go get -u github.com/cosmtrek/air
 ```
