@@ -40,14 +40,19 @@
 ```Shell
 # go get -u 强制使用网络更新
 
+# 热更新
+$ go get -u github.com/cosmtrek/air
+
 # Web框架
 $ go get -u github.com/gin-gonic/gin
 $ go get -u github.com/gin-contrib/cors
+$ go get -u github.com/appleboy/gin-jwt/v2
 # 数据库
-$ go get -u github.com/go-sql-driver/mysql
-$ go get -u go.mongodb.org/mongo-driver/mongo
 $ go get -u gorm.io/gorm
 $ go get -u gorm.io/driver/mysql
-# 热更新
-$ go get -u github.com/cosmtrek/air
+$ go get -u github.com/go-redis/redis/v8
+$ go get -u go.mongodb.org/mongo-driver/mongo
+# 工具
+$ go get -u go.uber.org/zap
+$ go get -u github.com/jinzhu/copier
 ```

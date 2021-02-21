@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-redis/redis"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gorm.io/driver/mysql"
@@ -23,6 +24,14 @@ const (
 	CHARSET   = "utf8"
 	PARSETIME = "TRUE"
 	LOC       = "Local"
+)
+
+// config for Redis
+const (
+	ADDRREDIS     = "www.littleredhat1997.com"
+	PORTREDIS     = "6379"
+	PASSWORDREDIS = "Zhangbincheng0"
+	DBREDIS       = 0
 )
 
 // config for MongoDB
@@ -53,22 +62,19 @@ func InitMySQL() *gorm.DB {
 		log.Println("dbDSN: " + dbDSN)
 		panic("MySQL数据源配置不正确: " + err.Error())
 	}
+	// db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(&User{}, &Role{}, &UserRole{})
 	return db
 }
 
-// InitMySQL init
-// func InitMySQL() *sql.DB {
-// 	dbDSN := fmt.Sprintf("%s:%s@%s(%s:%s)/%s?charset=%s", USERNAME, PASSWORD, PROTOCOL, HOST, PORT, DATABASE, CHARSET)
-// 	db, err := sql.Open("mysql", dbDSN)
-// 	if err != nil {
-// 		log.Println("dbDSN: " + dbDSN)
-// 		panic("MySQL数据源配置不正确: " + err.Error())
-// 	}
-// 	db.SetConnMaxLifetime(time.Minute * 3)
-// 	db.SetMaxOpenConns(10)
-// 	db.SetMaxIdleConns(10)
-// 	return db
-// }
+// InitRedis init
+func InitRedis() *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", ADDRREDIS, PORTREDIS),
+		Password: PASSWORDREDIS,
+		DB:       0,
+	})
+	return rdb
+}
 
 // InitMongoDB init
 func InitMongoDB() *mongo.Database {
@@ -80,6 +86,6 @@ func InitMongoDB() *mongo.Database {
 		log.Println("uri: " + uri)
 		panic("Redis数据源配置不正确: " + err.Error())
 	}
-	database := client.Database(DATABASEMONGO)
-	return database
+	mgo := client.Database(DATABASEMONGO)
+	return mgo
 }

@@ -3,16 +3,21 @@ package main
 import (
 	"context"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path"
 	"time"
 
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -21,9 +26,8 @@ import (
 
 var logger = InitLogger()
 var db *gorm.DB = InitMySQL()
-var database *mongo.Database = InitMongoDB()
-var collection *mongo.Collection = database.Collection(TEXT)
-var idGenerator *mongo.Collection = database.Collection(IDGENERATOR)
+var rdb *redis.Client = InitRedis()
+var mgo *mongo.Database = InitMongoDB()
 
 func success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, gin.H{
@@ -41,46 +45,100 @@ func failure(c *gin.Context, message interface{}) {
 }
 
 func info(c *gin.Context) {
-	user := make(map[string]interface{})
-	user["roles"] = "admin"
-	user["introduction"] = "I am a superadministrator"
-	user["avatar"] = "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif"
-	user["name"] = "Super Admin"
+	user := getAuthUser(c)
 	success(c, user)
 }
 
-func login(c *gin.Context) {
-	// username := c.Request.FormValue("username")
-	// password := c.Request.FormValue("password")
-	// ret, _ := db.Exec("INSERT INTO t_user (username, password) VALUES (?, ?)", username, password)
-	success(c, "token...")
-}
-
-func logout(c *gin.Context) {
-	success(c, "")
-}
-
 func register(c *gin.Context) {
-	username := c.Request.FormValue("username")
-	password := c.Request.FormValue("password")
-	ret, _ := db.Exec("INSERT INTO t_user (username, password) VALUES (?, ?)", username, password)
-	rowsAffected, _ := ret.RowsAffected()
-	success(c, rowsAffected)
+	var req RegisterReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	if db.Where("username = ?", req.Username).Take(&User{}).Error != nil {
+		user := User{
+			Username:     req.Username,
+			Password:     req.Password,
+			Role:         "admin",
+			Introduction: "I am a super administrator",
+			Avatar:       "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
+			Name:         "Super Admin",
+		}
+		res := db.Create(&user)
+		if err := res.Error; err != nil {
+			logger.Error(fmt.Sprintf("%v", err))
+			failure(c, err)
+			return
+		}
+		success(c, res.RowsAffected)
+		return
+	}
+	failure(c, "用户名已存在")
+}
+
+func getUserList(c *gin.Context) {
+	var req UserPageReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	var count int64
+	db.Model(User{}).Count(&count)
+	var list []User
+	offset := (req.Page - 1) * req.Limit
+	if req.Sort {
+		db.Order("id desc")
+	}
+	db.Limit(req.Limit).Offset(offset).Find(&list)
+	success(c, gin.H{
+		"list":  list,
+		"count": count,
+	})
 }
 
 func deleteUser(c *gin.Context) {
 	id := c.Param("id")
-	ret, _ := db.Exec("DELETE FROM t_user WHERE id = ?", id)
-	rowsAffected, _ := ret.RowsAffected()
-	success(c, rowsAffected)
+	res := db.Where("username = ?", id).Delete(User{})
+	if err := res.Error; err != nil {
+		logger.Error(fmt.Sprintf("%v", err))
+		failure(c, err)
+		return
+	}
+	success(c, res.RowsAffected)
+}
+
+func updateInfo(c *gin.Context) {
+	var req UpdateInfoReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	user := getAuthUser(c)
+	copier.Copy(&user, &req)
+	res := db.Model(&user).Updates(&user) // 不会更新空值
+	if err := res.Error; err != nil {
+		logger.Error(fmt.Sprintf("%v", err))
+		failure(c, err)
+		return
+	}
+	rdb.Del(user.Username)
+	success(c, res.RowsAffected)
 }
 
 func updatePassword(c *gin.Context) {
-	username := c.Request.FormValue("username")
-	password := c.Request.FormValue("password")
-	ret, _ := db.Exec("UPDATE t_user SET password = ? WHERE username = ?", password, username)
-	rowsAffected, _ := ret.RowsAffected()
-	success(c, rowsAffected)
+	var req UpdatePasswordReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusOK, gin.H{"code": 50000, "message": err.Error()})
+		return
+	}
+	user := getAuthUser(c)
+	res := db.Model(User{}).Where("username = ? and password = ?", user.Username, req.OldPwd).Update("password", req.NewPwd)
+	if err := res.Error; err != nil {
+		logger.Error(fmt.Sprintf("%v", err))
+		failure(c, err)
+		return
+	}
+	success(c, res.RowsAffected)
 }
 
 func getNextID(collection string) int {
@@ -88,7 +146,7 @@ func getNextID(collection string) int {
 	filter := bson.M{"collection": collection}
 	update := bson.M{"$inc": bson.M{"id": 1}}
 	opts := options.FindOneAndUpdate().SetUpsert(true)
-	err := idGenerator.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&generator)
+	err := mgo.Collection(IDGENERATOR).FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&generator)
 	if err != nil {
 		logger.Info(fmt.Sprint(err))
 		panic(err)
@@ -117,8 +175,8 @@ func getList(c *gin.Context) {
 	}
 	findOptions.SetLimit(req.Limit)
 	findOptions.SetSkip(offset)
-	count, _ := database.Collection(req.Table).CountDocuments(context.TODO(), filter)
-	res, _ := database.Collection(req.Table).Find(context.TODO(), filter, findOptions)
+	count, _ := mgo.Collection(req.Table).CountDocuments(context.TODO(), filter)
+	res, _ := mgo.Collection(req.Table).Find(context.TODO(), filter, findOptions)
 
 	list := make([]bson.M, 0)
 	for res.Next(context.TODO()) {
@@ -149,7 +207,7 @@ func updateText(c *gin.Context) { // 添加翻译
 	update := bson.M{
 		"$set": bson.M{"text": req.Text},
 	}
-	res, err := database.Collection(req.Table).UpdateOne(context.TODO(), filter, update)
+	res, err := mgo.Collection(req.Table).UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		panic(err)
 	}
@@ -170,7 +228,7 @@ func updateRecordText(c *gin.Context) { // 添加翻译
 			req.Language + ".status": WAITING,
 		},
 	}
-	res, err := database.Collection(req.Table).UpdateOne(context.TODO(), filter, update)
+	res, err := mgo.Collection(req.Table).UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		panic(err)
 	}
@@ -192,7 +250,7 @@ func updateStatus(c *gin.Context) {
 			req.Language + ".status": req.Status,
 		},
 	}
-	res, err := database.Collection(req.Table).UpdateMany(context.TODO(), filter, update)
+	res, err := mgo.Collection(req.Table).UpdateMany(context.TODO(), filter, update)
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +267,7 @@ func deleteItem(c *gin.Context) {
 	filter := bson.M{
 		"id": bson.M{"$in": req.Ids},
 	}
-	res, err := database.Collection(req.Table).DeleteMany(context.TODO(), filter)
+	res, err := mgo.Collection(req.Table).DeleteMany(context.TODO(), filter)
 	if err != nil {
 		panic(err)
 	}
@@ -243,7 +301,7 @@ func importData(c *gin.Context) {
 		}
 		list = append(list, item)
 	}
-	res, err := database.Collection(table).InsertMany(context.TODO(), list)
+	res, err := mgo.Collection(table).InsertMany(context.TODO(), list)
 	if err != nil {
 		panic(err)
 	}
@@ -269,7 +327,7 @@ func exportData(c *gin.Context) {
 	filter := bson.M{}
 	findOptions := options.Find()
 	findOptions.SetSort(bson.M{"id": 1})
-	res, _ := database.Collection(table).Find(context.TODO(), filter, findOptions)
+	res, _ := mgo.Collection(table).Find(context.TODO(), filter, findOptions)
 
 	data := [][]string{}
 	for res.Next(context.TODO()) {
@@ -304,34 +362,120 @@ func exportData(c *gin.Context) {
 
 func main() {
 	r := gin.Default()
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"*"},
 		AllowHeaders:     []string{"*"},
 		AllowCredentials: true,
-		MaxAge:           24 * time.Hour,
+		MaxAge:           time.Hour * 24,
 	}))
-	// r.Use(cors.Default())
+
+	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
+		Realm:       "go-vue",
+		Key:         []byte("roro"),
+		Timeout:     time.Hour * 24,
+		MaxRefresh:  time.Hour * 24,
+		IdentityKey: identityKey,
+		PayloadFunc: func(data interface{}) jwt.MapClaims {
+			if v, ok := data.(*User); ok {
+				return jwt.MapClaims{
+					identityKey: v.Username,
+				}
+			}
+			return jwt.MapClaims{}
+		},
+		IdentityHandler: func(c *gin.Context) interface{} {
+			claims := jwt.ExtractClaims(c)
+			username := claims[identityKey].(string)
+
+			val, err := rdb.Get(username).Result()
+			if err != nil {
+				var user User
+				res := db.Where("username = ?", username).First(&user) // MySQL
+				if err := res.Error; err != nil {
+					return nil
+				}
+				user.Password = "" // 敏感数据
+				jsonStr, _ := json.Marshal(user)
+				res2 := rdb.Set(username, string(jsonStr), 0) // Redis
+				if err := res2.Err(); err != nil {
+					return nil
+				}
+				return &user
+			}
+			var user User
+			_ = json.Unmarshal([]byte(val), &user)
+			return &user
+		},
+		Authenticator: func(c *gin.Context) (interface{}, error) {
+			var req LoginReq
+			if err := c.ShouldBind(&req); err != nil {
+				return nil, jwt.ErrMissingLoginValues
+			}
+			username := req.Username
+			password := req.Password
+			var user User
+			res := db.Where("username = ? and password = ?", username, password).First(&user)
+			if err := res.Error; err != nil {
+				logger.Error(fmt.Sprintf("%v", err))
+				return nil, jwt.ErrFailedAuthentication
+			}
+			return &User{Username: username}, nil
+		},
+		Authorizator: func(data interface{}, c *gin.Context) bool {
+			logger.Info(fmt.Sprint(data.(*User)))
+			if v, ok := data.(*User); ok && v.Role == "admin" {
+				return true
+			}
+			return false
+		},
+		Unauthorized: func(c *gin.Context, code int, message string) {
+			c.JSON(code, gin.H{
+				"code":    code,
+				"message": message,
+			})
+		},
+		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
+		TokenHeadName: "Bearer",
+		TimeFunc:      time.Now,
+	})
+	if err != nil {
+		log.Fatal("JWT Error:" + err.Error())
+	}
+	errInit := authMiddleware.MiddlewareInit()
+	if errInit != nil {
+		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
+	}
 
 	userV1 := r.Group("/v1/user")
 	{
-		userV1.GET("/info", info)
-		userV1.POST("/login", login)
-		userV1.POST("/logout", logout)
+		userV1.POST("/login", authMiddleware.LoginHandler)
+		userV1.POST("/logout", authMiddleware.LogoutHandler)
 		userV1.POST("/register", register)
-		userV1.DELETE("/:id", deleteUser)
-		userV1.PUT("/password", updatePassword)
+		userV1.Use(authMiddleware.MiddlewareFunc())
+		{
+			userV1.GET("/info", info)
+			userV1.GET("/list", getUserList)
+			userV1.DELETE("/:id", deleteUser)
+			userV1.PUT("/password", updatePassword)
+			userV1.PUT("/info", updateInfo)
+		}
 	}
 	itemV1 := r.Group("/v1/item")
 	{
-		itemV1.GET("/list", getList)
-		itemV1.GET("/status", getStatus)
-		itemV1.PUT("/text", updateText)
-		itemV1.PUT("/record/text", updateRecordText)
-		itemV1.PUT("/status", updateStatus)
-		itemV1.DELETE("", deleteItem)
-		itemV1.POST("/import", importData)
-		itemV1.GET("/export", exportData)
+		itemV1.Use(authMiddleware.MiddlewareFunc())
+		{
+			itemV1.GET("/list", getList)
+			itemV1.GET("/status", getStatus)
+			itemV1.PUT("/text", updateText)
+			itemV1.PUT("/record/text", updateRecordText)
+			itemV1.PUT("/status", updateStatus)
+			itemV1.DELETE("", deleteItem)
+			itemV1.POST("/import", importData)
+			itemV1.GET("/export", exportData)
+		}
 	}
 
 	r.Run(":8080")

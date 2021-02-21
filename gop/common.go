@@ -1,5 +1,78 @@
 package main
 
+import (
+	"database/sql"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+// Model struct
+type Model struct {
+	ID        uint         `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time    `json:"createTime"`
+	UpdatedAt time.Time    `json:"updateTime"`
+	DeletedAt sql.NullTime `gorm:"index" json:"-"`
+}
+
+// User struct
+type User struct {
+	Model
+	Username     string `gorm:"column:username" json:"-"`
+	Password     string `gorm:"column:password" json:"-"`
+	Role         string `gorm:"column:role" json:"role"`
+	Introduction string `gorm:"column:introduction" json:"introduction"`
+	Avatar       string `gorm:"column:avatar" json:"avatar"`
+	Name         string `gorm:"column:name" json:"name"`
+}
+
+// Role struct
+type Role struct {
+	ID   uint   `gorm:"primarykey"`
+	Name string `gorm:"column:name"`
+}
+
+// UserRole struct
+type UserRole struct {
+	ID     uint `gorm:"primarykey"`
+	UserID uint `gorm:"column:userId"`
+	RoleID uint `gorm:"column:roleId"`
+}
+
+// LoginReq struct
+type LoginReq struct {
+	Username string `form:"username" json:"username" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
+}
+
+// RegisterReq struct
+type RegisterReq struct {
+	Username string `form:"username" json:"username" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
+}
+
+// UserPageReq struct
+type UserPageReq struct {
+	Page  int    `form:"page" json:"page" binding:"required"`
+	Limit int    `form:"limit" json:"limit" binding:"required"`
+	Sort  bool   `form:"sort" json:"sort"`
+	Role  string `form:"role" json:"role"`
+}
+
+// UpdateInfoReq struct
+type UpdateInfoReq struct {
+	Role         string `form:"role" json:"role"`
+	Introduction string `form:"introduction" json:"introduction"`
+	Avatar       string `form:"avatar" json:"avatar"`
+	Name         string `form:"name" json:"name"`
+}
+
+// UpdatePasswordReq struct
+type UpdatePasswordReq struct {
+	NewPwd string `form:"newPwd" json:"newPwd" binding:"required"`
+	OldPwd string `form:"oldPwd" json:"oldPwd" binding:"required"`
+}
+
 // Generator struct
 type Generator struct {
 	ID         int    `bson:"id"`
@@ -11,13 +84,6 @@ type Result struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    string `json:"data"`
-}
-
-// User struct
-type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
 }
 
 // Status struct
@@ -85,3 +151,10 @@ const (
 	FAILURE
 	SUCCESS
 )
+
+var identityKey = "username"
+
+func getAuthUser(c *gin.Context) *User {
+	user, _ := c.Get(identityKey)
+	return user.(*User)
+}
