@@ -1,0 +1,35 @@
+mysql:
+  username: 'root'
+  password: 'Zhangbincheng0'
+  protocal: 'tcp'
+  addr: 'www.littleredhat1997.com:3306'
+  config: 'charset=utf8mb4&parseTime=True&loc=Local'
+  database: 'test'
+
+redis:
+  addr: 'www.littleredhat1997.com:6379'
+  password: 'Zhangbincheng0'
+  db: 0
+
+mongodb:
+  addr: '120.79.157.49:27017'
+  password: 'Zhangbincheng0'
+  database: 'test'
+
+jwt:
+  realm: 'go-vue'
+  key: 'roro'
+  timeout: 24
+  token-lookup: 'header: Authorization, query: token, cookie: jwt'
+  token-head-name: 'Bearer'
+
+zap:
+  level: 'info'
+  format: 'console'
+  prefix: '[GO-VUE]'
+  director: 'log'
+  link-name: 'latest_log'
+  show-line: true
+  encode-level: 'LowercaseColorLevelEncoder'
+  stacktrace-key: 'stacktrace'
+  log-in-console: true

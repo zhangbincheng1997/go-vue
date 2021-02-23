@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// InitLogger init
-func InitLogger() *zap.Logger {
+// Zap ...
+func Zap() *zap.Logger {
 	rawJSON := []byte(`{
 		"level": "info",
 		"outputPaths": ["stdout", "logs/log.log"],
