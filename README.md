@@ -53,7 +53,14 @@ $ go get -u gorm.io/driver/mysql
 $ go get -u github.com/go-redis/redis/v8
 $ go get -u go.mongodb.org/mongo-driver/mongo
 # 工具
-$ go get -u github.com/spf13/viper # 配置文件
-$ go get -u go.uber.org/zap
+$ go get -u github.com/spf13/viper # 配置
+$ go get -u go.uber.org/zap # 日志
+# 文档
+$ go get -u github.com/swaggo/swag/cmd/swag
+$ go get -u github.com/swaggo/gin-swagger
+$ go get -u github.com/swaggo/files
+# 其他
 $ go get -u github.com/jinzhu/copier
+# ...
+$ go get -u github.com/fsnotify/fsnotify
 ```

@@ -11,6 +11,10 @@ const IdentityKey = "username"
 
 // GetAuthUser ...
 func GetAuthUser(c *gin.Context) *model.User {
-	user, _ := c.Get(IdentityKey)
-	return user.(*model.User)
+	claims, exists := c.Get(IdentityKey)
+	if !exists {
+		LOG.Error("JWT解析错误！！！")
+		return nil
+	}
+	return claims.(*model.User)
 }

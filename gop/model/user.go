@@ -3,7 +3,7 @@ package model
 // User struct
 type User struct {
 	Model
-	Username     string `gorm:"column:username" json:"-"`
+	Username     string `gorm:"column:username" json:""`
 	Password     string `gorm:"column:password" json:"-"`
 	Role         string `gorm:"column:role" json:"role"`
 	Introduction string `gorm:"column:introduction" json:"introduction"`

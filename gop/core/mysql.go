@@ -3,8 +3,6 @@ package core
 import (
 	"fmt"
 	"main/global"
-	"main/model"
-	"os"
 
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
@@ -35,18 +33,4 @@ func MySQL() *gorm.DB {
 	}
 	global.LOG.Info("MySQL连接成功", zap.Any("dbDSN", dbDSN))
 	return db
-}
-
-// MySQLTables ...
-func MySQLTables(db *gorm.DB) {
-	err := db.AutoMigrate(
-		model.User{},
-		model.Role{},
-		model.UserRole{},
-	)
-	if err != nil {
-		global.LOG.Error("创建表失败", zap.Any("err", err))
-		os.Exit(0)
-	}
-	global.LOG.Info("创建表成功")
 }

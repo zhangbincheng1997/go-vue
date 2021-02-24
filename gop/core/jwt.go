@@ -7,6 +7,7 @@ import (
 	"main/model"
 	"main/model/request"
 	"main/model/response"
+	"main/utils"
 	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -62,7 +63,7 @@ func JWT() *jwt.GinJWTMiddleware {
 				return nil, jwt.ErrMissingLoginValues
 			}
 			var user model.User
-			res := global.DB.Where("username = ? and password = ?", req.Username, req.Password).First(&user)
+			res := global.DB.Where("username = ? and password = ?", req.Username, utils.MD5(req.Password)).First(&user)
 			if err := res.Error; err != nil {
 				global.LOG.Error("登录失败", zap.Any("err", err))
 				return nil, jwt.ErrFailedAuthentication
