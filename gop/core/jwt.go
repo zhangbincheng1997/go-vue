@@ -15,29 +15,23 @@ import (
 	"go.uber.org/zap"
 )
 
-const identityKey = global.IdentityKey
-
 // JWT ...
 func JWT() *jwt.GinJWTMiddleware {
 	cfg := global.CONFIG.JWT
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
-		Realm:         cfg.Realm,
-		Key:           []byte(cfg.Key),
-		Timeout:       time.Hour * time.Duration(cfg.Timeout),
-		IdentityKey:   identityKey,
-		TokenLookup:   cfg.TokenLookup,
-		TokenHeadName: cfg.TokenHeadName,
+		Key:     []byte(cfg.Key),
+		Timeout: time.Hour * time.Duration(cfg.Timeout),
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*model.User); ok {
 				return jwt.MapClaims{
-					identityKey: v.Username,
+					jwt.IdentityKey: v.Username,
 				}
 			}
 			return jwt.MapClaims{}
 		},
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
-			username := claims[identityKey].(string)
+			username := claims[jwt.IdentityKey].(string)
 
 			val, err := global.RDB.Get(username).Result()
 			if err != nil {
@@ -68,23 +62,22 @@ func JWT() *jwt.GinJWTMiddleware {
 				global.LOG.Error("登录失败", zap.Any("err", err))
 				return nil, jwt.ErrFailedAuthentication
 			}
-			return &model.User{Username: req.Username}, nil
+			return &model.User{Username: user.Username}, nil
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			global.LOG.Info("认证用户", zap.Any("user", data.(*model.User)))
-			if v, ok := data.(*model.User); ok && v.Role == "admin" {
-				return true
-			}
-			return false
+			return true // GroupAuthorizator
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
-			response.Result(c, code, nil, message)
+			response.FailWithMsg(c, message)
 		},
 		LoginResponse: func(c *gin.Context, code int, token string, t time.Time) {
 			response.OkWithData(c, gin.H{
 				"token":  token,
 				"expire": t.Format(time.RFC3339),
 			})
+		},
+		LogoutResponse: func(c *gin.Context, code int) {
+			response.Ok(c)
 		},
 	})
 	if err != nil {
@@ -95,4 +88,18 @@ func JWT() *jwt.GinJWTMiddleware {
 		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
 	}
 	return authMiddleware
+}
+
+//GroupAuthorizator ...
+func GroupAuthorizator(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := global.GetAuthUser(c)
+		global.LOG.Info("认证用户", zap.Any("user", user))
+		if role == user.Role {
+			c.Next()
+			return
+		}
+		c.Abort()
+		response.FailWithMsg(c, jwt.ErrForbidden.Error())
+	}
 }

@@ -52,6 +52,7 @@ $ go get -u gorm.io/gorm
 $ go get -u gorm.io/driver/mysql
 $ go get -u github.com/go-redis/redis/v8
 $ go get -u go.mongodb.org/mongo-driver/mongo
+$ go get -u github.com/qiniu/go-sdk/v7
 # 工具
 $ go get -u github.com/spf13/viper # 配置
 $ go get -u go.uber.org/zap # 日志

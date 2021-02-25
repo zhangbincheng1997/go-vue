@@ -8,9 +8,6 @@
       <el-button type="primary" icon="el-icon-search" @click="getList">
         查询
       </el-button>
-      <!-- <el-button style="float:right;" type="primary" icon="el-icon-edit" @click="handleCreate">
-        添加
-      </el-button> -->
       <el-button :loading="exportLoading" style="float:right;" type="primary" icon="el-icon-download" @click="handleExport">
         导出
       </el-button>
@@ -52,12 +49,6 @@
           <span v-else>{{ scope.row.text2 }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="120" fixed="right">
-        <template slot-scope="scope">
-          <el-button type="text" size="small" @click="handleEdit(scope.row)">翻译</el-button>
-          <el-button type="text" size="small" @click="handleHistory(scope.row.id)">历史</el-button>
-        </template>
-      </el-table-column>
       <el-table-column label="状态" align="center" width="120" fixed="right">
         <template slot-scope="scope">
           <el-select v-model="scope.row.status" placeholder="请选择" size="mini" @change="handleStatus(scope.row)">
@@ -67,38 +58,6 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
-
-    <el-dialog
-      title="翻译"
-      :visible.sync="editVisible"
-      :close-on-click-modal="false"
-      @close="resetEditForm"
-    >
-      <el-form ref="item" :model="item" label-width="120px">
-        <el-form-item label="路径" prop="path">
-          <el-input v-model="item.path" disabled />
-        </el-form-item>
-        <el-form-item label="变量名" prop="property">
-          <el-input v-model="item.property" disabled />
-        </el-form-item>
-        <el-form-item label="行数" prop="line">
-          <el-input v-model="item.line" disabled />
-        </el-form-item>
-        <el-form-item label="文本" prop="text">
-          <el-input v-model="item.text" type="textarea" autosize disabled />
-        </el-form-item>
-        <el-form-item label="翻译" prop="text2" :rules="{ required: true, message: '请输入中文', trigger: 'blur' }">
-          <el-input v-model="item.text2" type="textarea" autosize maxlength="1000" show-word-limit />
-        </el-form-item>
-        <el-form-item label="备注" prop="comment">
-          <el-input v-model="item.comment" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitEditForm">确 定</el-button>
-        <el-button @click="resetEditForm">取 消</el-button>
-      </div>
-    </el-dialog>
 
     <el-dialog
       title="导入"
@@ -146,29 +105,6 @@
         <el-button @click="resetSelectForm">取 消</el-button>
       </div>
     </el-dialog>
-
-    <el-dialog
-      title="历史"
-      :visible.sync="historyVisible"
-      @close="historyVisible = false"
-    >
-      <el-table
-        :data="historyData.slice((historyPage-1)*historyLimit,historyPage*historyLimit)"
-        border
-        highlight-current-row
-        style="width: 100%"
-      >
-        <el-table-column label="翻译" align="center" prop="text" />
-        <el-table-column label="备注" align="center" prop="comment" width="200" />
-        <el-table-column label="操作者" align="center" prop="operator" width="100" />
-        <el-table-column label="时间" align="center" width="100">
-          <template slot-scope="scope">
-            <span> {{ scope.row.time | parseTime }} </span>
-          </template>
-        </el-table-column>
-      </el-table>
-      <pagination v-show="historyData.length>0" :total="historyData.length" :page.sync="historyPage" :limit.sync="historyLimit" />
-    </el-dialog>
   </div>
 </template>
 
@@ -215,8 +151,6 @@ export default {
       selectStatus: undefined,
       selectVisible: false, // 多选修改状态
 
-      editVisible: false, // 编辑
-      historyVisible: false, // 历史
       importVisible: false, // 导入
       importLoading: false,
       exportLoading: false,
@@ -224,10 +158,6 @@ export default {
       editId: -1, // 记录正在编辑text的rowId
       editId2: -1, // 记录正在编辑text2的rowId
       editContent: undefined, // 编辑前的内容
-
-      historyData: [],
-      historyPage: 1,
-      historyLimit: 5,
 
       statusOptions: undefined,
       statusMap: {}
@@ -257,34 +187,13 @@ export default {
           for (var i in lst) {
             var item = lst[i]
             item.text2 = typeof(item[this.language]) === 'undefined' ? '' :  item[this.language].text
-            item.status = typeof(item[this.language]) === 'undefined' ? -1 :  item[this.language].status // NONE 特殊处理
+            item.status = typeof(item[this.language]) === 'undefined' ? 1 :  item[this.language].status // NONE 特殊处理
             this.list.push(item)
           }
          }
       }).finally(() => {
         this.listLoading = false
       })
-    },
-    handleEdit(row) {
-      this.editVisible = true
-      this.item = JSON.parse(JSON.stringify(row)) // 深拷贝
-    },
-    submitEditForm() {
-      this.$refs.item.validate((valid) => {
-        if (!valid) return false
-
-        var _item = (({id, text2, comment}) => ({id, text: text2, comment}))(this.item) // pick 2->1
-        updateRecord(this.table, this.language, _item).then(res => {
-          this.$message({ type: 'success', message: '操作成功：' + JSON.stringify(_item) })
-          this.resetEditForm()
-          this.getList()
-        })
-      })
-    },
-    resetEditForm() {
-      this.editVisible = false
-      this.$refs.item.resetFields();
-      this.item = Object.assign({}, defaultItem)
     },
     handleRemove() {
       this.$confirm('是否删除？', '提示', {
@@ -354,16 +263,6 @@ export default {
         this.$message({ type: 'success', message: '修改状态成功：' + this.statusMap[row.status] })
       })
     },
-    handleHistory(id) {
-      this.historyVisible = true
-      getRecordList(this.table, this.language, id).then(res => {
-        if (res.data instanceof Array) {
-          this.historyData = res.data
-        } else {
-          this.historyData = []
-        }
-      })
-    },
     submitImportForm() {
       if(this.$refs.upload.uploadFiles.length === 0) return
       let formData = new FormData()
@@ -374,6 +273,7 @@ export default {
       this.importLoading = true
       importData(formData).then(res => {
         this.$message({ type: 'success', message: res.data })
+        this.getList()
       }).finally(() => {
         this.importLoading = false
       })

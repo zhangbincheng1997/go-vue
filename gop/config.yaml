@@ -16,12 +16,18 @@ mongodb:
   password: 'Zhangbincheng0'
   database: 'test'
 
+qiniu:
+  zone: 'ZoneHuadong'
+  bucket: 'qm-plus-img'
+  img-path: 'http://qmplusimg.henrongyi.top'
+  use-https: false
+  access-key: '25j8dYBZ2wuiy0yhwShytjZDTX662b8xiFguwxzZ'
+  secret-key: 'pgdbqEsf7ooZh7W3xokP833h3dZ_VecFXPDeG5JY'
+  use-cdn-domains: false
+
 jwt:
-  realm: 'go-vue'
   key: 'roro'
   timeout: 24
-  token-lookup: 'header: Authorization, query: token, cookie: jwt'
-  token-head-name: 'Bearer'
 
 zap:
   level: 'info'

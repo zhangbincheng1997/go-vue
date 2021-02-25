@@ -1,6 +1,7 @@
 package main
 
 import (
+	"main/constant"
 	"main/controller"
 	"main/core"
 	"main/global"
@@ -42,10 +43,13 @@ func main() {
 		userV1.Use(authMiddleware.MiddlewareFunc())
 		{
 			userV1.GET("/info", controller.UserInfo)
-			userV1.GET("/list", controller.GetUserList)
-			userV1.DELETE("/", controller.DeleteUser)
 			userV1.PUT("/password", controller.UpdatePassword)
 			userV1.PUT("/info", controller.UpdateInfo)
+			userV1.Use(core.GroupAuthorizator(constant.ADMIN))
+			{
+				userV1.GET("/list", controller.GetUserList)
+				userV1.DELETE("/", controller.DeleteUser)
+			}
 		}
 	}
 	itemV1 := r.Group("/v1/item")
@@ -54,13 +58,21 @@ func main() {
 		{
 			itemV1.GET("/list", controller.GetList)
 			itemV1.GET("/status", controller.GetStatus)
-			itemV1.PUT("/text", controller.UpdateText)
-			itemV1.PUT("/record/text", controller.UpdateRecordText)
-			itemV1.PUT("/status", controller.UpdateStatus)
-			itemV1.DELETE("/", controller.DeleteItem)
-			itemV1.POST("/import", controller.ImportData)
-			itemV1.GET("/export", controller.ExportData)
+			itemV1.Use(core.GroupAuthorizator(constant.ADMIN))
+			{
+				itemV1.PUT("/text", controller.UpdateText)
+				itemV1.PUT("/record/text", controller.UpdateRecordText)
+				itemV1.PUT("/status", controller.UpdateStatus)
+				itemV1.DELETE("/", controller.DeleteItem)
+				itemV1.POST("/import", controller.ImportData)
+				itemV1.GET("/export", controller.ExportData)
+			}
 		}
+	}
+
+	uploadV1 := r.Group("/v1/upload")
+	{
+		uploadV1.POST("", controller.Upload)
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // http://localhost:8080/swagger/index.html

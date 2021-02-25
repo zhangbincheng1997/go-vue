@@ -50,9 +50,9 @@ func GetItemList(req request.ItemPageReq) (interface{}, int64, error) {
 	count, _ := global.MGO.Collection(req.Table).CountDocuments(context.TODO(), filter)
 	res, _ := global.MGO.Collection(req.Table).Find(context.TODO(), filter, findOptions)
 
-	var list []interface{}
+	list := make([]bson.M, 0)
 	for res.Next(context.TODO()) {
-		var item interface{}
+		var item bson.M
 		err := res.Decode(&item)
 		if err != nil {
 			return nil, 0, err
@@ -126,12 +126,22 @@ func ImportData(file *multipart.FileHeader, table string) error {
 		}
 		text := line[0]
 		property := line[1]
+
+		filter := bson.M{"text": text} // 去重
+		cnt, err := global.MGO.Collection(table).CountDocuments(context.TODO(), filter)
+		if cnt != 0 {
+			continue
+		}
+
 		item := bson.M{
 			"id":       getNextID(table),
 			"text":     text,
 			"property": property,
 		}
 		list = append(list, item)
+	}
+	if len(list) == 0 {
+		return nil
 	}
 	_, err := global.MGO.Collection(table).InsertMany(context.TODO(), list)
 	return err

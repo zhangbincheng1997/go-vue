@@ -101,7 +101,7 @@ func DeleteUser(c *gin.Context) {
 	err := service.DeleteUser(req)
 	if err != nil {
 		global.LOG.Error("删除用户失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "删除用户成功！")
@@ -126,7 +126,7 @@ func UpdatePassword(c *gin.Context) {
 	err := service.UpdatePassword(user, req)
 	if err != nil {
 		global.LOG.Error("更新密码失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "更新密码成功！")
@@ -151,7 +151,7 @@ func UpdateInfo(c *gin.Context) {
 	err := service.UpdateInfo(user, req)
 	if err != nil {
 		global.LOG.Error("更新信息失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 	}
 	response.OkWithData(c, "更新信息成功！")
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"main/constant"
 	"main/global"
 	"main/model"
 	"main/model/request"
@@ -18,10 +19,10 @@ func Login() {
 
 // Register ...
 func Register(req request.RegisterReq) error {
-	if !errors.Is(global.DB.Where("username = ?", req.Username).Take(&model.User{}).Error, gorm.ErrRecordNotFound) {
+	if !errors.Is(global.DB.Where("username = ?", req.Username).First(&model.User{}).Error, gorm.ErrRecordNotFound) {
 		return errors.New("用户名存在！")
 	}
-	user := model.User{Username: req.Username, Password: utils.MD5(req.Password)}
+	user := model.User{Username: req.Username, Password: utils.MD5(req.Password), Role: constant.GUEST}
 	return global.DB.Create(&user).Error
 }
 
@@ -53,9 +54,11 @@ func DeleteUser(req request.IDReq) error {
 
 // UpdatePassword ...
 func UpdatePassword(user *model.User, req request.UpdatePasswordReq) error {
-	db := global.DB.Model(&model.User{})
-	db.Where("username = ? and password = ?", user.Username, utils.MD5(req.OldPwd))
-	err := db.Update("password", utils.MD5(req.NewPwd)).Error
+	var u model.User
+	if errors.Is(global.DB.Where("username = ? and password = ?", user.Username, utils.MD5(req.OldPwd)).First(&u).Error, gorm.ErrRecordNotFound) {
+		return errors.New("用户名不存在或密码错误！")
+	}
+	err := global.DB.Model(&u).Update("password", utils.MD5(req.NewPwd)).Error
 	return err
 }
 

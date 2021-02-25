@@ -56,70 +56,52 @@ export const constantRoutes = [
   },
 
   {
-    path: '/admin',
+    path: '/user',
     component: Layout,
-    children: [{
-      path: 'admin',
-      name: 'Admin',
-      component: () => import('@/views/dashboard/index'), // TODO
-      meta: { title: '角色权限', icon: 'tree' }
-    }]
+    redirect: '/user/index',
+    name: 'User',
+    meta: {
+      title: '用户',
+      icon: 'tree',
+    },
+    children: [
+      {
+        path: 'password',
+        name: 'UserPassword',
+        meta: { title: '修改密码' },
+        component: () => import('@/views/user/password')
+      },
+      {
+        path: 'info',
+        name: 'UserInfo',
+        meta: { title: '修改信息' },
+        component: () => import('@/views/user/info')
+      },
+    ]
   },
 
   {
     path: '/japan',
     component: Layout,
-    redirect: '/japan/index',
-    name: 'japan',
-    meta: {
-      title: '日本',
-      icon: 'language',
-      // roles: [ROLES.ADMIN]
-    },
-    children: [
-      {
-        path: 'text',
-        name: 'japanText',
-        meta: { title: '文本翻译' },
-        component: () => import('@/views/language/text'),
-        props: () => ({ language: 'japan', table: 'text' })
-      },
-      {
-        path: 'image',
-        name: 'japanImage',
-        meta: { title: '图片翻译' },
-        component: () => import('@/views/language/text'), // TODO
-        props: () => ({ language: 'japan', table: 'image' })
-      },
-    ]
+    children: [{
+      path: 'text',
+      name: 'JapanText',
+      meta: { title: '日本', icon: 'language' },
+      component: () => import('@/views/language/text'),
+      props: () => ({ language: 'japan', table: 'text' })
+    }]
   },
 
   {
     path: '/korea',
     component: Layout,
-    redirect: '/korea/index',
-    name: 'korea',
-    meta: {
-      title: '韩国',
-      icon: 'language',
-      // roles: [ROLES.ADMIN]
-    },
-    children: [
-      {
-        path: 'text',
-        name: 'koreaText',
-        meta: { title: '文本翻译' },
-        component: () => import('@/views/language/text'),
-        props: () => ({ language: 'korea', table: 'text' })
-      },
-      {
-        path: 'image',
-        name: 'koreaImage',
-        meta: { title: '图片翻译' },
-        component: () => import('@/views/language/text'), // TODO
-        props: () => ({ language: 'korea', table: 'image' })
-      },
-    ]
+    children: [{
+      path: 'text',
+      name: 'KoreaText',
+      meta: { title: '韩国', icon: 'language' },
+      component: () => import('@/views/language/text'),
+      props: () => ({ language: 'korea', table: 'text' })
+    }]
   },
 
   // 404 page must be placed at the end !!!

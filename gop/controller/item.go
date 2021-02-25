@@ -68,7 +68,7 @@ func UpdateText(c *gin.Context) { // 添加翻译
 	err := service.UpdateText(req)
 	if err != nil {
 		global.LOG.Error("更新条目失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "更新条目成功！")
@@ -92,7 +92,7 @@ func UpdateRecordText(c *gin.Context) { // 添加翻译
 	err := service.UpdateRecordText(req)
 	if err != nil {
 		global.LOG.Error("更新条目翻译失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "更新条目翻译成功！")
@@ -116,7 +116,7 @@ func UpdateStatus(c *gin.Context) {
 	err := service.UpdateStatus(req)
 	if err != nil {
 		global.LOG.Error("更新条目状态失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "更新条目状态成功！")
@@ -140,7 +140,7 @@ func DeleteItem(c *gin.Context) {
 	err := service.DeleteItem(req)
 	if err != nil {
 		global.LOG.Error("删除条目状态失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "删除条目状态成功！")
@@ -162,7 +162,7 @@ func ImportData(c *gin.Context) {
 	err := service.ImportData(file, table)
 	if err != nil {
 		global.LOG.Error("导入数据失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 	response.OkWithData(c, "导入数据成功！")
@@ -187,7 +187,7 @@ func ExportData(c *gin.Context) {
 	err := service.ExportData(filename, table, language)
 	if err != nil {
 		global.LOG.Error("导出数据失败！", zap.Any("err", err))
-		response.FailWithData(c, err)
+		response.FailWithMsg(c, err.Error())
 		return
 	}
 

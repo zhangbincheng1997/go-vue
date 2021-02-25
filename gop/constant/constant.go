@@ -23,3 +23,9 @@ const (
 	FAILURE
 	SUCCESS
 )
+
+// User const
+const (
+	ADMIN = "admin"
+	GUEST = "guest"
+)
