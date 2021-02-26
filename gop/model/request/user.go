@@ -20,16 +20,21 @@ type UserPageReq struct {
 	Role  string `form:"role" json:"role"`
 }
 
+// UpdatePasswordReq struct
+type UpdatePasswordReq struct {
+	NewPwd string `form:"newPwd" json:"newPwd" binding:"required"`
+	OldPwd string `form:"oldPwd" json:"oldPwd" binding:"required"`
+}
+
 // UpdateInfoReq struct
 type UpdateInfoReq struct {
-	Role         string `form:"role" json:"role"`
 	Introduction string `form:"introduction" json:"introduction"`
 	Avatar       string `form:"avatar" json:"avatar"`
 	Name         string `form:"name" json:"name"`
 }
 
-// UpdatePasswordReq struct
-type UpdatePasswordReq struct {
-	NewPwd string `form:"newPwd" json:"newPwd" binding:"required"`
-	OldPwd string `form:"oldPwd" json:"oldPwd" binding:"required"`
+// UpdateRoleReq struct
+type UpdateRoleReq struct {
+	ID   int    `form:"id" json:"id"`
+	Role string `form:"role" json:"role"`
 }

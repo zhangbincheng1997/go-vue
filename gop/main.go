@@ -47,6 +47,7 @@ func main() {
 			userV1.PUT("/info", controller.UpdateInfo)
 			userV1.Use(core.GroupAuthorizator(constant.ADMIN))
 			{
+				userV1.PUT("/role", controller.UpdateRole)
 				userV1.GET("/list", controller.GetUserList)
 				userV1.DELETE("/", controller.DeleteUser)
 			}

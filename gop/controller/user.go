@@ -155,3 +155,26 @@ func UpdateInfo(c *gin.Context) {
 	}
 	response.OkWithData(c, "更新信息成功！")
 }
+
+// UpdateRole ...
+// @Tags User
+// @Summary 更新角色
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param data body request.UpdateRoleReq true "UpdateRoleReq"
+// @Success 200 {object} response.Response
+// @Router /v1/user/role [put]
+func UpdateRole(c *gin.Context) {
+	var req request.UpdateRoleReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.FailWithMsg(c, err.Error())
+		return
+	}
+	err := service.UpdateRole(req)
+	if err != nil {
+		global.LOG.Error("更新角色失败！", zap.Any("err", err))
+		response.FailWithMsg(c, err.Error())
+	}
+	response.OkWithData(c, "更新角色成功！")
+}

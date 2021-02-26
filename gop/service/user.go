@@ -40,6 +40,9 @@ func GetUserList(req request.UserPageReq) (interface{}, int64, error) {
 	if req.Sort {
 		db.Order("id desc")
 	}
+	if req.Role != "" {
+		db.Where("role = ?", req.Role)
+	}
 	err := db.Limit(req.Limit).Offset(offset).Find(&list).Error
 	return list, count, err
 }
@@ -48,7 +51,7 @@ func GetUserList(req request.UserPageReq) (interface{}, int64, error) {
 func DeleteUser(req request.IDReq) error {
 	var user model.User
 	copier.Copy(&user, &req)
-	err := global.DB.Delete(user).Error
+	err := global.DB.Delete(&user).Error
 	return err
 }
 
@@ -67,5 +70,15 @@ func UpdateInfo(user *model.User, req request.UpdateInfoReq) error {
 	copier.Copy(&user, &req)
 	err := global.DB.Model(&user).Updates(&user).Error // 不会更新空值
 	global.RDB.Del(user.Username)                      // 清空缓存
+	return err
+}
+
+// UpdateRole ...
+func UpdateRole(req request.UpdateRoleReq) error {
+	var user model.User
+	var username string
+	copier.Copy(&user, &req)
+	err := global.DB.Model(&user).Updates(&user).Pluck("username", &username).Error // 不会更新空值
+	global.RDB.Del(username)                                                        // 清空缓存
 	return err
 }

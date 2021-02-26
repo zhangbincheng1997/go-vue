@@ -23,6 +23,22 @@ export function logout() {
   })
 }
 
+export function register(data) {
+  return request({
+    url: '/user/register',
+    method: 'post',
+    data: data
+  })
+}
+
+export function getUserList(data) {
+  return request({
+    url: '/user/list',
+    method: 'get',
+    params: data
+  })
+}
+
 export function updatePassword(data) {
   return request({
     url: '/user/password',
@@ -36,5 +52,25 @@ export function updateInfo(data) {
     url: '/user/info',
     method: 'put',
     data: data
+  })
+}
+export function updateRole(id, role) {
+  return request({
+    url: '/user/role',
+    method: 'put',
+    data: {
+      id: id,
+      role: role
+    }
+  })
+}
+
+export function deleteUser(id) {
+  return request({
+    url: '/user',
+    method: 'delete',
+    data: {
+      id: id
+    }
   })
 }

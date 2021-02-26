@@ -1,11 +1,6 @@
 <template>
   <el-container>
     <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-      <el-form-item label="角色" prop="role">
-        <el-select v-model="form.role" placeholder="请选择角色">
-          <el-option v-for="role in roleOptions" :key="role.id" :label="role.desc" :value="role.id" />
-        </el-select>
-      </el-form-item>
       <el-form-item label="头像" prop="avatar">
         <el-upload
           class="avatar-uploader"
@@ -39,20 +34,15 @@ export default {
   data() {
     return {
       form: {
-        role: '',
         avatar: '',
         name: '',
         introduction: '',
       },
       rules: {
-        role: [
+        name: [
           { required: true, message: '请输入角色', trigger: 'blur' }
         ]
-      },
-      roleOptions: [
-        { id: 'admin', desc: '管理员' },
-        { id: 'guest', desc: '游客' }
-      ]
+      }
     }
   },
   created() {
@@ -86,7 +76,7 @@ export default {
       });
     },
     resetForm() {
-      this.$refs.form.resetFields();
+      this.$refs.form.resetFields()
     }
   }
 }
