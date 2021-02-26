@@ -2,7 +2,7 @@ package core
 
 import (
 	"encoding/json"
-	"log"
+	"errors"
 	"main/global"
 	"main/model"
 	"main/model/request"
@@ -13,6 +13,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // JWT ...
@@ -32,24 +33,7 @@ func JWT() *jwt.GinJWTMiddleware {
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			username := claims[jwt.IdentityKey].(string)
-
-			val, err := global.RDB.Get(username).Result()
-			if err != nil {
-				var user model.User
-				// errors.Is(err, gorm.ErrRecordNotFound)
-				if err := global.DB.Where("username = ?", username).First(&user).Error; err != nil { // MySQL
-					return nil
-				}
-				user.Password = "" // 敏感数据
-				jsonStr, _ := json.Marshal(user)
-				if err := global.RDB.Set(username, string(jsonStr), 0).Err(); err != nil { // Redis
-					return nil
-				}
-				return &user
-			}
-			var user model.User
-			_ = json.Unmarshal([]byte(val), &user)
-			return &user
+			return username
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var req request.LoginReq
@@ -57,14 +41,17 @@ func JWT() *jwt.GinJWTMiddleware {
 				return nil, jwt.ErrMissingLoginValues
 			}
 			var user model.User
-			res := global.DB.Where("username = ? and password = ?", req.Username, utils.MD5(req.Password)).First(&user)
-			if err := res.Error; err != nil {
-				global.LOG.Error("登录失败", zap.Any("err", err))
+			err := global.DB.Where("username = ? and password = ?", req.Username, utils.MD5(req.Password)).First(&user).Error
+			if err != nil {
+				global.LOG.Error("登录失败！", zap.Any("err", err))
 				return nil, jwt.ErrFailedAuthentication
 			}
 			return &model.User{Username: user.Username}, nil
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
+			if username, ok := data.(string); ok && username != "" {
+				return true
+			}
 			return true // GroupAuthorizator
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
@@ -81,11 +68,11 @@ func JWT() *jwt.GinJWTMiddleware {
 		},
 	})
 	if err != nil {
-		log.Fatal("JWT Error:" + err.Error())
+		global.LOG.Error("JWT", zap.Any("err", err))
 	}
 	errInit := authMiddleware.MiddlewareInit()
 	if errInit != nil {
-		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
+		global.LOG.Error("MiddlewareInit", zap.Any("err", errInit))
 	}
 	return authMiddleware
 }
@@ -93,8 +80,27 @@ func JWT() *jwt.GinJWTMiddleware {
 //GroupAuthorizator ...
 func GroupAuthorizator(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := global.GetAuthUser(c)
-		global.LOG.Info("认证用户", zap.Any("user", user))
+		username := global.GetAuthUser(c)
+
+		var user model.User
+		val, err := global.RDB.Get(username).Result()
+		if err != nil {
+			if errors.Is(global.DB.Where("username = ?", username).First(&user).Error, gorm.ErrRecordNotFound) { // MySQL
+				c.Abort()
+				response.FailWithMsg(c, jwt.ErrForbidden.Error())
+				return
+			}
+			user.Password = "" // 敏感数据
+			jsonStr, _ := json.Marshal(user)
+			if err := global.RDB.Set(username, string(jsonStr), 0).Err(); err != nil { // Redis
+				c.Abort()
+				response.FailWithMsg(c, jwt.ErrForbidden.Error())
+				return
+			}
+		} else {
+			_ = json.Unmarshal([]byte(val), &user)
+		}
+		global.LOG.Info("【认证用户】", zap.Any("user", user))
 		if role == user.Role {
 			c.Next()
 			return

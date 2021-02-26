@@ -8,10 +8,10 @@ type PageInfo struct {
 
 // IDReq struct
 type IDReq struct {
-	ID uint `form:"id" json:"id"`
+	ID uint `form:"id" json:"id" binding:"required"`
 }
 
 // IdsReq struct
 type IdsReq struct {
-	Ids []int `form:"ids" json:"ids"`
+	Ids []int `form:"ids" json:"ids" binding:"required"`
 }

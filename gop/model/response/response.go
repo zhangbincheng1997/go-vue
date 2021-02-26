@@ -9,8 +9,8 @@ import (
 // Response ...
 type Response struct {
 	Code int         `json:"code"`
-	Data interface{} `json:"data"`
 	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
 }
 
 // CODE
@@ -20,50 +20,50 @@ const (
 )
 
 // Result ...
-func Result(c *gin.Context, code int, data interface{}, msg string) {
+func Result(c *gin.Context, code int, msg string, data interface{}) {
 	c.JSON(http.StatusOK, Response{
 		code,
-		data,
 		msg,
+		data,
 	})
 }
 
 // Ok ...
 func Ok(c *gin.Context) {
-	Result(c, SUCCESS, map[string]interface{}{}, "ok")
+	Result(c, SUCCESS, "ok", map[string]interface{}{})
 }
 
 // OkWithData ...
 func OkWithData(c *gin.Context, data interface{}) {
-	Result(c, SUCCESS, data, "ok")
+	Result(c, SUCCESS, "ok", data)
 }
 
 // OkWithMsg ...
 func OkWithMsg(c *gin.Context, msg string) {
-	Result(c, SUCCESS, map[string]interface{}{}, msg)
+	Result(c, SUCCESS, msg, map[string]interface{}{})
 }
 
 // OkWithDetailed ...
 func OkWithDetailed(c *gin.Context, data interface{}, msg string) {
-	Result(c, SUCCESS, data, msg)
+	Result(c, SUCCESS, msg, data)
 }
 
 // Fail ...
 func Fail(c *gin.Context) {
-	Result(c, ERROR, map[string]interface{}{}, "fail")
+	Result(c, ERROR, "fail", map[string]interface{}{})
 }
 
 // FailWithData ...
 func FailWithData(c *gin.Context, data interface{}) {
-	Result(c, ERROR, data, "fail")
+	Result(c, ERROR, "fail", data)
 }
 
 // FailWithMsg ...
 func FailWithMsg(c *gin.Context, msg string) {
-	Result(c, ERROR, map[string]interface{}{}, msg)
+	Result(c, ERROR, msg, map[string]interface{}{})
 }
 
 // FailWithDetailed ...
 func FailWithDetailed(c *gin.Context, data interface{}, msg string) {
-	Result(c, ERROR, data, msg)
+	Result(c, ERROR, msg, data)
 }

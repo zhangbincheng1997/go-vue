@@ -1,13 +1,13 @@
 basePath: /
 definitions:
-  model.Status:
+  model.Option:
     properties:
       desc:
-        type: string
+        type: object
       id:
-        type: integer
+        type: object
     type: object
-  request.DeleteReq:
+  request.DeleteItemReq:
     properties:
       ids:
         items:
@@ -23,6 +23,8 @@ definitions:
     properties:
       id:
         type: integer
+    required:
+    - id
     type: object
   request.LoginReq:
     properties:
@@ -70,8 +72,6 @@ definitions:
         type: string
       name:
         type: string
-      role:
-        type: string
     type: object
   request.UpdatePasswordReq:
     properties:
@@ -82,6 +82,16 @@ definitions:
     required:
     - newPwd
     - oldPwd
+    type: object
+  request.UpdateRoleReq:
+    properties:
+      id:
+        type: integer
+      role:
+        type: string
+    required:
+    - id
+    - role
     type: object
   request.UpdateTextReq:
     properties:
@@ -119,12 +129,12 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: DeleteReq
+      - description: DeleteItemReq
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/request.DeleteReq'
+          $ref: '#/definitions/request.DeleteItemReq'
       produces:
       - application/json
       responses:
@@ -134,7 +144,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 删除
+      summary: 删除条目
       tags:
       - Item
   /v1/item/export:
@@ -185,7 +195,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 导入
+      summary: 导入数据
       tags:
       - Item
   /v1/item/list:
@@ -225,7 +235,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 获取列表
+      summary: 获取条目列表
       tags:
       - Item
   /v1/item/record/text:
@@ -248,7 +258,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 更新翻译
+      summary: 更新条目翻译
       tags:
       - Item
   /v1/item/status:
@@ -260,11 +270,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.Status'
+              $ref: '#/definitions/model.Option'
             type: array
-      security:
-      - ApiKeyAuth: []
-      summary: 获取状态
+      summary: 获取状态选项
       tags:
       - Item
     put:
@@ -286,7 +294,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 更新状态
+      summary: 更新条目状态
       tags:
       - Item
   /v1/item/text:
@@ -309,7 +317,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 更新
+      summary: 更新条目
       tags:
       - Item
   /v1/user:
@@ -330,7 +338,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 删除
+      summary: 删除用户
       tags:
       - User
   /v1/user/info:
@@ -395,7 +403,7 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - ApiKeyAuth: []
-      summary: 获取列表
+      summary: 获取用户列表
       tags:
       - User
   /v1/user/login:
@@ -461,6 +469,42 @@ paths:
           schema:
             $ref: '#/definitions/response.Response'
       summary: 注册
+      tags:
+      - User
+  /v1/user/role:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Option'
+            type: array
+      summary: 获取角色选项
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: UpdateRoleReq
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 更新角色
       tags:
       - User
 securityDefinitions:

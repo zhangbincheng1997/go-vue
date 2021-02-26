@@ -40,15 +40,15 @@ var doc = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "删除",
+                "summary": "删除条目",
                 "parameters": [
                     {
-                        "description": "DeleteReq",
+                        "description": "DeleteItemReq",
                         "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.DeleteReq"
+                            "$ref": "#/definitions/request.DeleteItemReq"
                         }
                     }
                 ],
@@ -118,7 +118,7 @@ var doc = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "导入",
+                "summary": "导入数据",
                 "parameters": [
                     {
                         "type": "file",
@@ -157,7 +157,7 @@ var doc = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "获取列表",
+                "summary": "获取条目列表",
                 "parameters": [
                     {
                         "type": "string",
@@ -225,7 +225,7 @@ var doc = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "更新翻译",
+                "summary": "更新条目翻译",
                 "parameters": [
                     {
                         "description": "UpdateTextReq",
@@ -249,25 +249,20 @@ var doc = `{
         },
         "/v1/item/status": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Item"
                 ],
-                "summary": "获取状态",
+                "summary": "获取状态选项",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/model.Status"
+                                "$ref": "#/definitions/model.Option"
                             }
                         }
                     }
@@ -288,7 +283,7 @@ var doc = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "更新状态",
+                "summary": "更新条目状态",
                 "parameters": [
                     {
                         "description": "StatusReq",
@@ -326,7 +321,7 @@ var doc = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "更新",
+                "summary": "更新条目",
                 "parameters": [
                     {
                         "description": "UpdateTextReq",
@@ -361,7 +356,7 @@ var doc = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "删除",
+                "summary": "删除用户",
                 "parameters": [
                     {
                         "description": "IDReq",
@@ -456,7 +451,7 @@ var doc = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "获取列表",
+                "summary": "获取用户列表",
                 "parameters": [
                     {
                         "type": "integer",
@@ -594,21 +589,79 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/v1/user/role": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取角色选项",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Option"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "更新角色",
+                "parameters": [
+                    {
+                        "description": "UpdateRoleReq",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "model.Status": {
+        "model.Option": {
             "type": "object",
             "properties": {
                 "desc": {
-                    "type": "string"
+                    "type": "object"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "object"
                 }
             }
         },
-        "request.DeleteReq": {
+        "request.DeleteItemReq": {
             "type": "object",
             "required": [
                 "ids",
@@ -628,6 +681,9 @@ var doc = `{
         },
         "request.IDReq": {
             "type": "object",
+            "required": [
+                "id"
+            ],
             "properties": {
                 "id": {
                     "type": "integer"
@@ -701,9 +757,6 @@ var doc = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "role": {
-                    "type": "string"
                 }
             }
         },
@@ -718,6 +771,21 @@ var doc = `{
                     "type": "string"
                 },
                 "oldPwd": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.UpdateRoleReq": {
+            "type": "object",
+            "required": [
+                "id",
+                "role"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
                     "type": "string"
                 }
             }

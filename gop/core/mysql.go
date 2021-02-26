@@ -28,9 +28,9 @@ func MySQL() *gorm.DB {
 	}
 	db, err := gorm.Open(dialector, config)
 	if err != nil {
-		global.LOG.Error("MySQL连接失败", zap.Any("err", err))
+		global.LOG.Error("MySQL连接失败！", zap.Any("err", err))
 		return nil
 	}
-	global.LOG.Info("MySQL连接成功", zap.Any("dbDSN", dbDSN))
+	global.LOG.Info("MySQL连接成功！", zap.Any("dbDSN", dbDSN))
 	return db
 }

@@ -62,7 +62,7 @@ export const constantRoutes = [
     name: 'User',
     meta: {
       title: '用户',
-      icon: 'tree',
+      icon: 'tree'
     },
     children: [
       {
@@ -82,7 +82,7 @@ export const constantRoutes = [
         name: 'UserInfo',
         meta: { title: '修改信息' },
         component: () => import('@/views/user/info')
-      },
+      }
     ]
   },
 
@@ -93,7 +93,7 @@ export const constantRoutes = [
       path: 'text',
       name: 'JapanText',
       meta: { title: '日本', icon: 'language' },
-      component: () => import('@/views/language/text'),
+      component: () => import('@/views/item/index'),
       props: () => ({ language: 'japan', table: 'text' })
     }]
   },
@@ -105,7 +105,7 @@ export const constantRoutes = [
       path: 'text',
       name: 'KoreaText',
       meta: { title: '韩国', icon: 'language' },
-      component: () => import('@/views/language/text'),
+      component: () => import('@/views/item/index'),
       props: () => ({ language: 'korea', table: 'text' })
     }]
   },

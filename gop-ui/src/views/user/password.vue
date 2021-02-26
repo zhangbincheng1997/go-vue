@@ -2,10 +2,10 @@
   <el-container>
     <el-form ref="form" :model="form" :rules="rules" label-width="100px">
       <el-form-item label="旧密码" prop="oldPwd">
-        <el-input type="password" v-model="form.oldPwd" autocomplete="off"></el-input>
+        <el-input v-model="form.oldPwd" type="password" autocomplete="off" />
       </el-form-item>
       <el-form-item label="新密码" prop="newPwd">
-        <el-input type="password" v-model="form.newPwd" autocomplete="off"></el-input>
+        <el-input v-model="form.newPwd" type="password" autocomplete="off" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="submitForm">提交</el-button>
@@ -46,7 +46,7 @@ export default {
           console.log('error submit!!')
           return false
         }
-      });
+      })
     },
     resetForm() {
       this.$refs.form.resetFields()

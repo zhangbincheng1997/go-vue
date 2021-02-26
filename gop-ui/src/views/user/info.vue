@@ -7,16 +7,17 @@
           action=""
           :http-request="uploadAvatar"
           :show-file-list="false"
-          accept=".jpg, .jpeg, .png">
+          accept=".jpg, .jpeg, .png"
+        >
           <img v-if="form.avatar" :src="form.avatar" class="avatar">
-          <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          <i v-else class="el-icon-plus avatar-uploader-icon" />
         </el-upload>
       </el-form-item>
       <el-form-item label="昵称" prop="name">
-        <el-input v-model="form.name" autocomplete="off"></el-input>
+        <el-input v-model="form.name" autocomplete="off" />
       </el-form-item>
       <el-form-item label="简介" prop="introduction">
-        <el-input v-model="form.introduction" autocomplete="off"></el-input>
+        <el-input v-model="form.introduction" autocomplete="off" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="submitForm">提交</el-button>
@@ -36,7 +37,7 @@ export default {
       form: {
         avatar: '',
         name: '',
-        introduction: '',
+        introduction: ''
       },
       rules: {
         name: [
@@ -56,7 +57,7 @@ export default {
         this.$message.error('上传图片大小不能超过10MB!')
         return
       }
-      let formData = new FormData()
+      const formData = new FormData()
       formData.append('file', param.file)
       upload(formData).then(res => {
         this.$message({ type: 'success', message: res })
@@ -73,7 +74,7 @@ export default {
           console.log('error submit!!')
           return false
         }
-      });
+      })
     },
     resetForm() {
       this.$refs.form.resetFields()

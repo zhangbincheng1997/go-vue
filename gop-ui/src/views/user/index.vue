@@ -7,7 +7,7 @@
       <el-button type="primary" icon="el-icon-search" @click="getList">
         查询
       </el-button>
-      <el-button style="float:right;" type="primary" icon="el-icon-download" @click="visible = true">
+      <el-button style="float:right;" type="primary" icon="el-icon-user" @click="visible = true">
         注册
       </el-button>
     </div>
@@ -23,7 +23,7 @@
       <el-table-column label="用户名" align="center" prop="username" width="200" />
       <el-table-column label="头像" align="center" prop="avatar" width="200">
         <template slot-scope="scope">
-          <el-image style="width: 100px; height: 100px" :src="scope.row.avatar"></el-image>
+          <el-image style="width: 100px; height: 100px" :src="scope.row.avatar" />
         </template>
       </el-table-column>
       <el-table-column label="昵称" align="center" prop="name" width="200" />
@@ -37,12 +37,12 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="120" fixed="right">
         <template slot-scope="scope">
-          <el-button @click="handleDelete(scope.row)" type="text" size="small">删除</el-button>
+          <el-button type="text" size="small" @click="handleRemove(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
-  
+
     <el-dialog
       title="注册"
       :visible.sync="visible"
@@ -51,11 +51,11 @@
       @close="resetForm"
     >
       <el-form ref="form" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="用户名" props="username">
-          <el-input v-model="form.username"></el-input>
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" />
         </el-form-item>
-        <el-form-item label="密码" props="password">
-          <el-input v-model="form.password"></el-input>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import { register, getUserList, updateRole, deleteUser } from '@/api/user'
+import { register, getRoleOptions, getUserList, updateRole, remove } from '@/api/user'
 
 import Pagination from '@/components/Pagination'
 
@@ -91,7 +91,7 @@ export default {
       visible: false,
       form: {
         username: '',
-        password: '',
+        password: ''
       },
       rules: {
         username: [
@@ -102,20 +102,21 @@ export default {
         ]
       },
 
-      roleOptions: [
-        { id: 'admin', desc: '管理员' },
-        { id: 'guest', desc: '游客' }
-      ],
-      roleMap: {
-        'admin': '管理员',
-        'guest': '游客'
-      }
+      roleOptions: undefined,
+      roleMap: {},
     }
   },
   created() {
-    this.getList()
+    this.init()
   },
   methods: {
+    init() {
+      getRoleOptions().then(res => {
+        this.roleOptions = res.data
+        for (const role of this.roleOptions) this.roleMap[role.id] = role.desc
+      })
+      this.getList()
+    },
     getList() {
       this.listLoading = true
       getUserList(this.listQuery).then(res => {
@@ -129,7 +130,7 @@ export default {
       })
     },
     handleSortChange({ column, prop, order }) {
-      this.listQuery.sort = order === 'ascending' ? true : false
+      this.listQuery.sort = order === 'ascending'
       this.getList()
     },
     submitForm() {
@@ -138,32 +139,34 @@ export default {
           register(this.form).then(res => {
             this.$message({ type: 'success', message: res })
             this.resetForm()
+            this.getList()
           })
         } else {
           console.log('error submit!!')
           return false
         }
-      });
+      })
     },
     resetForm() {
       this.$refs.form.resetFields()
       this.visible = false
     },
-    handleDelete(row) {
+    handleRole(row) {
+      updateRole(row.id, row.role).then(res => {
+        this.$message({ type: 'success', message: res })
+        this.getList()
+      })
+    },
+    handleRemove(row) {
       this.$confirm('是否删除？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteUser(row.id).then(res => {
+        remove(row.id).then(res => {
           this.$message({ type: 'success', message: res })
           this.getList()
         })
-      })
-    },
-    handleRole(row) {
-      updateRole(row.id, row.role).then(res => {
-          this.$message({ type: 'success', message: res })
       })
     }
   }

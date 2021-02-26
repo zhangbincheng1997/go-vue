@@ -1,3 +1,15 @@
+zap:
+  level: 'info'
+  filename: 'logs/app.log'
+  max-size: 500
+  max-backups: 3
+  max-age: 28
+  compress: true
+
+jwt:
+  key: 'roro'
+  timeout: 24
+
 mysql:
   username: 'root'
   password: 'Zhangbincheng0'
@@ -17,25 +29,10 @@ mongodb:
   database: 'test'
 
 qiniu:
-  zone: 'ZoneHuadong'
-  bucket: 'qm-plus-img'
-  img-path: 'http://qmplusimg.henrongyi.top'
-  use-https: false
   access-key: '25j8dYBZ2wuiy0yhwShytjZDTX662b8xiFguwxzZ'
   secret-key: 'pgdbqEsf7ooZh7W3xokP833h3dZ_VecFXPDeG5JY'
+  img-path: 'http://qmplusimg.henrongyi.top'
+  bucket: 'qm-plus-img'
+  zone: 'ZoneHuadong'
+  use-https: false
   use-cdn-domains: false
-
-jwt:
-  key: 'roro'
-  timeout: 24
-
-zap:
-  level: 'info'
-  format: 'console'
-  prefix: '[GO-VUE]'
-  director: 'log'
-  link-name: 'latest_log'
-  show-line: true
-  encode-level: 'LowercaseColorLevelEncoder'
-  stacktrace-key: 'stacktrace'
-  log-in-console: true

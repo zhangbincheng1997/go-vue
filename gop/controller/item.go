@@ -13,18 +13,17 @@ import (
 	"go.uber.org/zap"
 )
 
-// GetStatus ...
+// GetStatusOptions ...
 // @Tags Item
-// @Summary 获取状态
-// @Security ApiKeyAuth
+// @Summary 获取状态选项
 // @Produce json
-// @Success 200 {object} []model.Status
+// @Success 200 {object} []model.Option
 // @Router /v1/item/status [get]
-func GetStatus(c *gin.Context) {
+func GetStatusOptions(c *gin.Context) {
 	response.OkWithData(c, constant.StatusOptions)
 }
 
-// GetList ...
+// GetItemList ...
 // @Tags Item
 // @Summary 获取条目列表
 // @Security ApiKeyAuth
@@ -32,7 +31,7 @@ func GetStatus(c *gin.Context) {
 // @Param data query request.ItemPageReq true "ItemPageReq"
 // @Success 200 {object} response.Response
 // @Router /v1/item/list [get]
-func GetList(c *gin.Context) {
+func GetItemList(c *gin.Context) {
 	var req request.ItemPageReq
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.FailWithMsg(c, err.Error())
@@ -59,7 +58,7 @@ func GetList(c *gin.Context) {
 // @Param data body request.UpdateTextReq true "UpdateTextReq"
 // @Success 200 {object} response.Response
 // @Router /v1/item/text [put]
-func UpdateText(c *gin.Context) { // 添加翻译
+func UpdateText(c *gin.Context) {
 	var req request.UpdateTextReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.FailWithMsg(c, err.Error())
@@ -71,7 +70,7 @@ func UpdateText(c *gin.Context) { // 添加翻译
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "更新条目成功！")
+	response.OkWithMsg(c, "更新条目成功！")
 }
 
 // UpdateRecordText ...
@@ -83,7 +82,7 @@ func UpdateText(c *gin.Context) { // 添加翻译
 // @Param data body request.UpdateTextReq true "UpdateTextReq"
 // @Success 200 {object} response.Response
 // @Router /v1/item/record/text [put]
-func UpdateRecordText(c *gin.Context) { // 添加翻译
+func UpdateRecordText(c *gin.Context) {
 	var req request.UpdateTextReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.FailWithMsg(c, err.Error())
@@ -95,7 +94,7 @@ func UpdateRecordText(c *gin.Context) { // 添加翻译
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "更新条目翻译成功！")
+	response.OkWithMsg(c, "更新条目翻译成功！")
 }
 
 // UpdateStatus ...
@@ -119,7 +118,7 @@ func UpdateStatus(c *gin.Context) {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "更新条目状态成功！")
+	response.OkWithMsg(c, "更新条目状态成功！")
 }
 
 // DeleteItem ...
@@ -128,11 +127,11 @@ func UpdateStatus(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Accept json
 // @Produce json
-// @Param data body request.DeleteReq true "DeleteReq"
+// @Param data body request.DeleteItemReq true "DeleteItemReq"
 // @Success 200 {object} response.Response
 // @Router /v1/item [delete]
 func DeleteItem(c *gin.Context) {
-	var req request.DeleteReq
+	var req request.DeleteItemReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.FailWithMsg(c, err.Error())
 		return
@@ -143,7 +142,7 @@ func DeleteItem(c *gin.Context) {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "删除条目状态成功！")
+	response.OkWithMsg(c, "删除条目状态成功！")
 }
 
 // ImportData ...
@@ -165,7 +164,7 @@ func ImportData(c *gin.Context) {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "导入数据成功！")
+	response.OkWithMsg(c, "导入数据成功！")
 }
 
 // ExportData ...
@@ -180,9 +179,7 @@ func ImportData(c *gin.Context) {
 func ExportData(c *gin.Context) {
 	table := c.Query("table")
 	language := c.Query("language")
-	dir := "data"
-	_filename := "data.csv"
-	filename := path.Join(dir, _filename)
+	filename := path.Join(global.DataDir, global.DataFile)
 
 	err := service.ExportData(filename, table, language)
 	if err != nil {
@@ -191,7 +188,7 @@ func ExportData(c *gin.Context) {
 		return
 	}
 
-	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", _filename))
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", global.DataFile))
 	c.Writer.Header().Add("Content-Type", "application/octet-stream")
 	c.File(filename)
 }

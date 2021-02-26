@@ -10,13 +10,6 @@ type ItemPageReq struct {
 	Keyword  string `form:"keyword" json:"keyword"`
 }
 
-// RecordReq struct
-type RecordReq struct {
-	Table    string `form:"table" json:"table" binding:"required"`
-	Language string `form:"language" json:"language" binding:"required"`
-	ID       int    `form:"id" json:"id"`
-}
-
 // UpdateTextReq struct
 type UpdateTextReq struct {
 	ID       int    `form:"id" json:"id" binding:"required"`
@@ -25,8 +18,8 @@ type UpdateTextReq struct {
 	Text     string `form:"text" json:"text" binding:"required"`
 }
 
-// DeleteReq struct
-type DeleteReq struct {
+// DeleteItemReq struct
+type DeleteItemReq struct {
 	Table string `form:"table" json:"table" binding:"required"`
 	Ids   []int  `form:"ids" json:"ids" binding:"required"`
 }

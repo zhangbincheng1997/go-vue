@@ -1,15 +1,13 @@
 # go-vue
 
-## GO
-
-### 环境变量
+## 环境变量
 
 - GOROOT=D:\Go\
 - path + %GOROOT%\bin
 - GO111MODULE=on
 - GOPROXY=https://goproxy.cn
 
-### vscode 配置
+## vscode 配置
 
 1. Go
 2. CodeRunner
@@ -47,15 +45,15 @@ $ go get -u github.com/cosmtrek/air
 $ go get -u github.com/gin-gonic/gin
 $ go get -u github.com/gin-contrib/cors
 $ go get -u github.com/appleboy/gin-jwt/v2
-# 数据库
-$ go get -u gorm.io/gorm
-$ go get -u gorm.io/driver/mysql
-$ go get -u github.com/go-redis/redis/v8
-$ go get -u go.mongodb.org/mongo-driver/mongo
-$ go get -u github.com/qiniu/go-sdk/v7
-# 工具
-$ go get -u github.com/spf13/viper # 配置
-$ go get -u go.uber.org/zap # 日志
+# 核心
+$ go get -u github.com/spf13/viper # Config
+$ go get -u go.uber.org/zap # Log
+$ go get -u gopkg.in/natefinch/lumberjack.v2
+$ go get -u gorm.io/gorm # ORM
+$ go get -u gorm.io/driver/mysql # MySQL
+$ go get -u github.com/go-redis/redis/v8 # Redis
+$ go get -u go.mongodb.org/mongo-driver/mongo # MongoDB
+$ go get -u github.com/qiniu/go-sdk/v7 # OSS
 # 文档
 $ go get -u github.com/swaggo/swag/cmd/swag
 $ go get -u github.com/swaggo/gin-swagger
@@ -64,4 +62,5 @@ $ go get -u github.com/swaggo/files
 $ go get -u github.com/jinzhu/copier
 # ...
 $ go get -u github.com/fsnotify/fsnotify
+$ go get -u github.com/alecthomas/template
 ```

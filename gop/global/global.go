@@ -2,7 +2,6 @@ package global
 
 import (
 	"main/config"
-	"main/model"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
@@ -15,22 +14,30 @@ import (
 
 // 全局变量
 var (
+	CONFIG config.Config
+	LOG    *zap.Logger
 	DB     *gorm.DB
 	RDB    *redis.Client
 	MGO    *mongo.Database
-	LOG    *zap.Logger
-	CONFIG config.Config
 )
 
 // ConfigFile ...
 var ConfigFile = "config.yaml"
 
+// DataDir ...
+var DataDir = "data"
+
+// DataFile ...
+var DataFile = "data.csv"
+
 // GetAuthUser ...
-func GetAuthUser(c *gin.Context) *model.User {
+func GetAuthUser(c *gin.Context) string {
+	// func GetAuthUser(c *gin.Context) *model.User {
 	claims, exists := c.Get(jwt.IdentityKey)
 	if !exists {
 		LOG.Error("JWT解析错误！！！")
-		return nil
+		return ""
 	}
-	return claims.(*model.User)
+	// return claims.(*model.User)
+	return claims.(string)
 }

@@ -74,7 +74,7 @@ func UpdateText(req request.UpdateTextReq) error {
 
 // UpdateRecordText ...
 func UpdateRecordText(req request.UpdateTextReq) error {
-	filter := bson.M{"id": req.ID} // 翻译
+	filter := bson.M{"id": req.ID}
 	update := bson.M{
 		"$set": bson.M{
 			req.Language + ".text":   req.Text,
@@ -87,9 +87,7 @@ func UpdateRecordText(req request.UpdateTextReq) error {
 
 // UpdateStatus ...
 func UpdateStatus(req request.StatusReq) error {
-	filter := bson.M{
-		"id": bson.M{"$in": req.Ids},
-	}
+	filter := bson.M{"id": bson.M{"$in": req.Ids}}
 	update := bson.M{
 		"$set": bson.M{
 			req.Language + ".status": req.Status,
@@ -100,10 +98,8 @@ func UpdateStatus(req request.StatusReq) error {
 }
 
 // DeleteItem ...
-func DeleteItem(req request.DeleteReq) error {
-	filter := bson.M{
-		"id": bson.M{"$in": req.Ids},
-	}
+func DeleteItem(req request.DeleteItemReq) error {
+	filter := bson.M{"id": bson.M{"$in": req.Ids}}
 	_, err := global.MGO.Collection(req.Table).DeleteMany(context.TODO(), filter)
 	return err
 }
@@ -157,11 +153,7 @@ func ExportData(filename string, table string, language string) error {
 	file.WriteString("\xEF\xBB\xBF") // UTF-8 BOM
 	w := csv.NewWriter(file)
 
-	filter := bson.M{}
-	findOptions := options.Find()
-	findOptions.SetSort(bson.M{"id": 1})
-	res, _ := global.MGO.Collection(table).Find(context.TODO(), filter, findOptions)
-
+	res, _ := global.MGO.Collection(table).Find(context.TODO(), bson.M{})
 	data := [][]string{}
 	for res.Next(context.TODO()) {
 		var item map[string]interface{}
@@ -173,16 +165,13 @@ func ExportData(filename string, table string, language string) error {
 		content = append(content, fmt.Sprint(item["id"].(int32)))
 		content = append(content, item["text"].(string))
 		content = append(content, item["property"].(string))
-		l := item[language].(map[string]interface{})
-		if l["text"] != nil {
-			content = append(content, l["text"].(string))
-		} else {
-			content = append(content, "")
-		}
-		if l["status"] != nil {
-			content = append(content, constant.StatusMap[l["status"].(int32)])
-		} else {
-			content = append(content, "")
+		if item[language] != nil {
+			l := item[language].(map[string]interface{})
+			if l["text"] != nil {
+				content = append(content, l["text"].(string))
+			} else {
+				content = append(content, "")
+			}
 		}
 		data = append(data, content)
 	}

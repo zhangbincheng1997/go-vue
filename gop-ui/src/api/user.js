@@ -31,6 +31,13 @@ export function register(data) {
   })
 }
 
+export function getRoleOptions() {
+  return request({
+    url: '/user/role',
+    method: 'get'
+  })
+}
+
 export function getUserList(data) {
   return request({
     url: '/user/list',
@@ -54,6 +61,7 @@ export function updateInfo(data) {
     data: data
   })
 }
+
 export function updateRole(id, role) {
   return request({
     url: '/user/role',
@@ -65,7 +73,7 @@ export function updateRole(id, role) {
   })
 }
 
-export function deleteUser(id) {
+export function remove(id) {
   return request({
     url: '/user',
     method: 'delete',

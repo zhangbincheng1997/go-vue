@@ -35,6 +35,6 @@ type UpdateInfoReq struct {
 
 // UpdateRoleReq struct
 type UpdateRoleReq struct {
-	ID   int    `form:"id" json:"id"`
-	Role string `form:"role" json:"role"`
+	ID   int    `form:"id" json:"id" binding:"required"`
+	Role string `form:"role" json:"role" binding:"required"`
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"main/constant"
 	"main/global"
 	"main/model/request"
 	"main/model/response"
@@ -10,15 +11,31 @@ import (
 	"go.uber.org/zap"
 )
 
-// UserInfo ...
+// GetRoleOptions ...
+// @Tags User
+// @Summary 获取角色选项
+// @Produce json
+// @Success 200 {object} []model.Option
+// @Router /v1/user/role [get]
+func GetRoleOptions(c *gin.Context) {
+	response.OkWithData(c, constant.RoleOptions)
+}
+
+// GetUserInfo ...
 // @Tags User
 // @Summary 获取信息
 // @Security ApiKeyAuth
 // @Produce json
 // @Success 200 {object} response.Response
 // @Router /v1/user/info [get]
-func UserInfo(c *gin.Context) {
-	user := global.GetAuthUser(c)
+func GetUserInfo(c *gin.Context) {
+	username := global.GetAuthUser(c)
+	user, err := service.GetUserInfo(username)
+	if err != nil {
+		global.LOG.Error("获取信息失败！", zap.Any("err", err))
+		response.FailWithMsg(c, err.Error())
+		return
+	}
 	response.OkWithData(c, user)
 }
 
@@ -32,7 +49,7 @@ func UserInfo(c *gin.Context) {
 // @Router /v1/user/login [post]
 func Login(c *gin.Context) {
 	service.Login() // pass
-	response.Ok(c)
+	response.OkWithMsg(c, "登录成功！")
 }
 
 // Register ...
@@ -55,7 +72,7 @@ func Register(c *gin.Context) {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "注册成功！")
+	response.OkWithMsg(c, "注册成功！")
 }
 
 // GetUserList ...
@@ -104,7 +121,7 @@ func DeleteUser(c *gin.Context) {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "删除用户成功！")
+	response.OkWithMsg(c, "删除用户成功！")
 }
 
 // UpdatePassword ...
@@ -117,19 +134,19 @@ func DeleteUser(c *gin.Context) {
 // @Success 200 {object} response.Response
 // @Router /v1/user/password [put]
 func UpdatePassword(c *gin.Context) {
-	user := global.GetAuthUser(c)
+	username := global.GetAuthUser(c)
 	var req request.UpdatePasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	err := service.UpdatePassword(user, req)
+	err := service.UpdatePassword(username, req)
 	if err != nil {
 		global.LOG.Error("更新密码失败！", zap.Any("err", err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	response.OkWithData(c, "更新密码成功！")
+	response.OkWithMsg(c, "更新密码成功！")
 }
 
 // UpdateInfo ...
@@ -142,18 +159,18 @@ func UpdatePassword(c *gin.Context) {
 // @Success 200 {object} response.Response
 // @Router /v1/user/info [put]
 func UpdateInfo(c *gin.Context) {
-	user := global.GetAuthUser(c)
+	username := global.GetAuthUser(c)
 	var req request.UpdateInfoReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.FailWithMsg(c, err.Error())
 		return
 	}
-	err := service.UpdateInfo(user, req)
+	err := service.UpdateInfo(username, req)
 	if err != nil {
 		global.LOG.Error("更新信息失败！", zap.Any("err", err))
 		response.FailWithMsg(c, err.Error())
 	}
-	response.OkWithData(c, "更新信息成功！")
+	response.OkWithMsg(c, "更新信息成功！")
 }
 
 // UpdateRole ...
@@ -176,5 +193,5 @@ func UpdateRole(c *gin.Context) {
 		global.LOG.Error("更新角色失败！", zap.Any("err", err))
 		response.FailWithMsg(c, err.Error())
 	}
-	response.OkWithData(c, "更新角色成功！")
+	response.OkWithMsg(c, "更新角色成功！")
 }
