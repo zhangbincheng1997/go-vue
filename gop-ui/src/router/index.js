@@ -90,11 +90,11 @@ export const constantRoutes = [
     path: '/japan',
     component: Layout,
     children: [{
-      path: 'text',
-      name: 'JapanText',
+      path: 'item',
+      name: 'JapanItem',
       meta: { title: '日本', icon: 'language' },
       component: () => import('@/views/item/index'),
-      props: () => ({ language: 'japan', table: 'text' })
+      props: () => ({ language: 'japan', table: 'item' })
     }]
   },
 
@@ -102,11 +102,11 @@ export const constantRoutes = [
     path: '/korea',
     component: Layout,
     children: [{
-      path: 'text',
-      name: 'KoreaText',
+      path: 'item',
+      name: 'KoreaItem',
       meta: { title: '韩国', icon: 'language' },
       component: () => import('@/views/item/index'),
-      props: () => ({ language: 'korea', table: 'text' })
+      props: () => ({ language: 'korea', table: 'item' })
     }]
   },
 

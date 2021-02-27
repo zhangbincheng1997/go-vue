@@ -254,7 +254,7 @@ export default {
       this.selectIds = []
       for (let i = 0; i < val.length; i++) if (val[i].id) this.selectIds.push(val[i].id)
     },
-    submitSelectForm() {
+    submitStatusForm() {
       if (this.selectIds === undefined || this.selectStatus === undefined) return
       updateStatus(this.table, this.language, this.selectIds, this.selectStatus).then(res => {
         this.$message({ type: 'success', message: '修改状态成功：' + this.statusMap[this.selectStatus] })
@@ -280,7 +280,7 @@ export default {
       this.resetImportForm()
       this.importLoading = true
       importData(formData).then(res => {
-        this.$message({ type: 'success', message: res.data })
+        this.$message({ type: 'success', message: res })
         this.getList()
       }).finally(() => {
         this.importLoading = false

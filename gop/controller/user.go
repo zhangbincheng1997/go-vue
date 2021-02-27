@@ -14,6 +14,7 @@ import (
 // GetRoleOptions ...
 // @Tags User
 // @Summary 获取角色选项
+// @Security ApiKeyAuth
 // @Produce json
 // @Success 200 {object} []model.Option
 // @Router /v1/user/role [get]

@@ -343,6 +343,42 @@ var doc = `{
                 }
             }
         },
+        "/v1/upload": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Upload"
+                ],
+                "summary": "上传文件",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "file",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/user": {
             "delete": {
                 "security": [
@@ -592,6 +628,11 @@ var doc = `{
         },
         "/v1/user/role": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -748,6 +789,11 @@ var doc = `{
         },
         "request.UpdateInfoReq": {
             "type": "object",
+            "required": [
+                "avatar",
+                "introduction",
+                "name"
+            ],
             "properties": {
                 "avatar": {
                     "type": "string"

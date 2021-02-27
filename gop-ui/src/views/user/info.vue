@@ -40,8 +40,14 @@ export default {
         introduction: ''
       },
       rules: {
+        avatar: [
+          { required: true, message: '请上传头像', trigger: 'blur' }
+        ],
         name: [
-          { required: true, message: '请输入角色', trigger: 'blur' }
+          { required: true, message: '请输入昵称', trigger: 'blur' }
+        ],
+        introduction: [
+          { required: true, message: '请输入简介', trigger: 'blur' }
         ]
       }
     }
@@ -60,8 +66,8 @@ export default {
       const formData = new FormData()
       formData.append('file', param.file)
       upload(formData).then(res => {
-        this.$message({ type: 'success', message: res })
         this.form.avatar = res.data
+        this.$message({ type: 'success', message: res })
       })
     },
     submitForm() {

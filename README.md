@@ -48,13 +48,13 @@ $ go get -u github.com/appleboy/gin-jwt/v2
 # 核心
 $ go get -u github.com/spf13/viper # Config
 $ go get -u go.uber.org/zap # Log
-$ go get -u gopkg.in/natefinch/lumberjack.v2
+$ go get -u gopkg.in/natefinch/lumberjack.v2 # Log rolling
 $ go get -u gorm.io/gorm # ORM
 $ go get -u gorm.io/driver/mysql # MySQL
 $ go get -u github.com/go-redis/redis/v8 # Redis
 $ go get -u go.mongodb.org/mongo-driver/mongo # MongoDB
 $ go get -u github.com/qiniu/go-sdk/v7 # OSS
-# 文档
+# 文档 http://localhost:8080/swagger/index.html#/
 $ go get -u github.com/swaggo/swag/cmd/swag
 $ go get -u github.com/swaggo/gin-swagger
 $ go get -u github.com/swaggo/files

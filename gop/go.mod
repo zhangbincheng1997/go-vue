@@ -20,7 +20,6 @@ require (
 	github.com/onsi/gomega v1.10.5 // indirect
 	github.com/qiniu/go-sdk/v7 v7.9.1
 	github.com/spf13/viper v1.7.1
-	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.3.0
 	github.com/swaggo/swag v1.7.0
 	github.com/ugorji/go v1.2.4 // indirect

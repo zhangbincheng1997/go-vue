@@ -2,10 +2,10 @@ package config
 
 // Zap struct
 type Zap struct {
-	Level      string `json:"level" yaml:"level"`
-	Filename   string `json:"filename" yaml:"filename"`
-	MaxSize    int    `json:"maxSize" yaml:"max-size"`
-	MaxBackups int    `json:"maxBackups" yaml:"max-backups"`
-	MaxAge     int    `json:"maxAge" yaml:"max-age"`
-	Compress   bool   `json:"compress" yaml:"compress"`
+	Level      string `mapstructure:"level" json:"level" yaml:"level"`
+	Filename   string `mapstructure:"filename" json:"filename" yaml:"filename"`
+	MaxSize    int    `mapstructure:"max-size" json:"maxSize" yaml:"max-size"`
+	MaxBackups int    `mapstructure:"max-backups" json:"maxBackups" yaml:"max-backups"`
+	MaxAge     int    `mapstructure:"max-age" json:"maxAge" yaml:"max-age"`
+	Compress   bool   `mapstructure:"compress" json:"compress" yaml:"compress"`
 }

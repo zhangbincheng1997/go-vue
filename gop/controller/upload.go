@@ -9,8 +9,16 @@ import (
 	"go.uber.org/zap"
 )
 
-// Upload ...
-func Upload(c *gin.Context) {
+// UploadFile ...
+// @Tags Upload
+// @Summary 上传文件
+// @Security ApiKeyAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "file"
+// @Success 200 {object} response.Response
+// @Router /v1/upload [post]
+func UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		response.FailWithMsg(c, err.Error())

@@ -2,7 +2,7 @@ package config
 
 // Redis struct
 type Redis struct {
-	DB       int    `yaml:"db" json:"db"`
-	Addr     string `yaml:"addr" json:"addr"`
-	Password string `yaml:"password" json:"password"`
+	DB       int    `mapstructure:"db" json:"db" yaml:"db"`
+	Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
+	Password string `mapstructure:"password" json:"password" yaml:"password"`
 }

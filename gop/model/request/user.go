@@ -22,15 +22,15 @@ type UserPageReq struct {
 
 // UpdatePasswordReq struct
 type UpdatePasswordReq struct {
-	NewPwd string `form:"newPwd" json:"newPwd" binding:"required"`
-	OldPwd string `form:"oldPwd" json:"oldPwd" binding:"required"`
+	NewPwd string `form:"newPwd" json:"newPwd" binding:"required,min=3,max=12"`
+	OldPwd string `form:"oldPwd" json:"oldPwd" binding:"required,min=3,max=12"`
 }
 
 // UpdateInfoReq struct
 type UpdateInfoReq struct {
-	Introduction string `form:"introduction" json:"introduction"`
-	Avatar       string `form:"avatar" json:"avatar"`
-	Name         string `form:"name" json:"name"`
+	Introduction string `form:"introduction" json:"introduction" binding:"required"`
+	Avatar       string `form:"avatar" json:"avatar" binding:"required"`
+	Name         string `form:"name" json:"name" binding:"required"`
 }
 
 // UpdateRoleReq struct

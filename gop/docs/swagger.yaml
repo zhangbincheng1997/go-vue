@@ -72,6 +72,10 @@ definitions:
         type: string
       name:
         type: string
+    required:
+    - avatar
+    - introduction
+    - name
     type: object
   request.UpdatePasswordReq:
     properties:
@@ -320,6 +324,28 @@ paths:
       summary: 更新条目
       tags:
       - Item
+  /v1/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 上传文件
+      tags:
+      - Upload
   /v1/user:
     delete:
       parameters:
@@ -482,6 +508,8 @@ paths:
             items:
               $ref: '#/definitions/model.Option'
             type: array
+      security:
+      - ApiKeyAuth: []
       summary: 获取角色选项
       tags:
       - User

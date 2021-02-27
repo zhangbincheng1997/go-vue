@@ -73,7 +73,10 @@ func main() {
 	}
 	uploadV1 := v1.Group("/upload")
 	{
-		uploadV1.POST("", controller.Upload)
+		uploadV1.Use(authMiddleware.MiddlewareFunc())
+		{
+			uploadV1.POST("", controller.UploadFile)
+		}
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // http://localhost:8080/swagger/index.html

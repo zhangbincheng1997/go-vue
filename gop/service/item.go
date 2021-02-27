@@ -36,7 +36,14 @@ func GetItemList(req request.ItemPageReq) (interface{}, int64, error) {
 	offset := (req.Page - 1) * req.Limit
 	filter := bson.M{}
 	if req.Status != 0 {
-		filter[req.Language+".status"] = req.Status
+		if req.Status == constant.WAITING {
+			filter["$or"] = []bson.M{
+				{req.Language: bson.M{"$exists": false}},
+				{req.Language + ".status": constant.WAITING},
+			}
+		} else {
+			filter[req.Language+".status"] = req.Status
+		}
 	}
 	if len(req.Keyword) > 0 {
 		filter["text"] = bson.M{"$regex": req.Keyword}

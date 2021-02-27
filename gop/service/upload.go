@@ -15,6 +15,8 @@ import (
 // Upload ...
 func Upload(file *multipart.FileHeader) (string, error) {
 	config := global.CONFIG.Qiniu
+	global.LOG.Error("", zap.Any("config", config))
+	global.LOG.Error("", zap.Any("config", global.CONFIG.Zap))
 	putPolicy := storage.PutPolicy{Scope: config.Bucket}
 	mac := qbox.NewMac(config.AccessKey, config.SecretKey)
 	upToken := putPolicy.UploadToken(mac)
@@ -26,17 +28,15 @@ func Upload(file *multipart.FileHeader) (string, error) {
 	formUploader := storage.NewFormUploader(&cfg)
 	ret := storage.PutRet{}
 	putExtra := storage.PutExtra{Params: map[string]string{"x:name": "github logo"}}
-
 	f, openErr := file.Open()
 	if openErr != nil {
-		global.LOG.Error("上传文件open异常！", zap.Any("err", openErr.Error()))
 		return "", openErr
 	}
 	fileKey := fmt.Sprintf("%d%s", time.Now().Unix(), file.Filename)
+	global.LOG.With(zap.Any("fileKey", fileKey))
 	putErr := formUploader.Put(context.Background(), &ret, upToken, fileKey, f, file.Size, &putExtra)
 	if putErr != nil {
-		global.LOG.Error("上传文件put异常！", zap.Any("err", putErr.Error()))
-		return "", openErr
+		return "", putErr
 	}
 	return global.CONFIG.Qiniu.ImgPath + "/" + ret.Key, nil
 }

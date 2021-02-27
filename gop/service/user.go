@@ -65,7 +65,7 @@ func DeleteUser(req request.IDReq) error {
 func UpdatePassword(username string, req request.UpdatePasswordReq) error {
 	var user model.User
 	if errors.Is(global.DB.Where("username = ? and password = ?", username, utils.MD5(req.OldPwd)).First(&user).Error, gorm.ErrRecordNotFound) {
-		return errors.New("用户名不存在或密码错误！")
+		return errors.New("密码错误！")
 	}
 	err := global.DB.Model(&user).Update("password", utils.MD5(req.NewPwd)).Error
 	return err

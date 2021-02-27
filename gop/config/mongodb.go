@@ -2,6 +2,6 @@ package config
 
 // MongoDB struct
 type MongoDB struct {
-	Addr     string `yaml:"addr" json:"addr"`
-	Database string `yaml:"database" json:"database"`
+	Addr     string `mapstructure:"addr" json:"addr" yaml:"addr"`
+	Database string `mapstructure:"database" json:"database" yaml:"database"`
 }
