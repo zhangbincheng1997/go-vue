@@ -12,7 +12,7 @@ import (
 var level zapcore.Level
 
 // Zap ...
-func Zap() *zap.Logger {
+func Zap() *zap.SugaredLogger {
 	cfg := global.CONFIG.Zap
 	switch cfg.Level {
 	case "debug":
@@ -56,5 +56,5 @@ func Zap() *zap.Logger {
 		atomicLevel, // 日志级别
 	)
 	logger := zap.New(core)
-	return logger
+	return logger.Sugar()
 }

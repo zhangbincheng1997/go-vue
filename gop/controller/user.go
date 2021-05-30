@@ -8,7 +8,6 @@ import (
 	"main/service"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // GetRoleOptions ...
@@ -33,7 +32,7 @@ func GetUserInfo(c *gin.Context) {
 	username := global.GetAuthUser(c)
 	user, err := service.GetUserInfo(username)
 	if err != nil {
-		global.LOG.Error("获取信息失败！", zap.Any("err", err))
+		global.LOG.Errorf("获取信息失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -69,7 +68,7 @@ func Register(c *gin.Context) {
 	}
 	err := service.Register(req)
 	if err != nil {
-		global.LOG.Error("注册失败！", zap.Any("err", err))
+		global.LOG.Errorf("注册失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -92,7 +91,7 @@ func GetUserList(c *gin.Context) {
 	}
 	list, count, err := service.GetUserList(req)
 	if err != nil {
-		global.LOG.Error("获取用户列表失败！", zap.Any("err", err))
+		global.LOG.Errorf("获取用户列表失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -118,7 +117,7 @@ func DeleteUser(c *gin.Context) {
 	}
 	err := service.DeleteUser(req)
 	if err != nil {
-		global.LOG.Error("删除用户失败！", zap.Any("err", err))
+		global.LOG.Errorf("删除用户失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -143,7 +142,7 @@ func UpdatePassword(c *gin.Context) {
 	}
 	err := service.UpdatePassword(username, req)
 	if err != nil {
-		global.LOG.Error("更新密码失败！", zap.Any("err", err))
+		global.LOG.Errorf("更新密码失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -168,7 +167,7 @@ func UpdateInfo(c *gin.Context) {
 	}
 	err := service.UpdateInfo(username, req)
 	if err != nil {
-		global.LOG.Error("更新信息失败！", zap.Any("err", err))
+		global.LOG.Errorf("更新信息失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 	}
 	response.OkWithMsg(c, "更新信息成功！")
@@ -191,7 +190,7 @@ func UpdateRole(c *gin.Context) {
 	}
 	err := service.UpdateRole(req)
 	if err != nil {
-		global.LOG.Error("更新角色失败！", zap.Any("err", err))
+		global.LOG.Errorf("更新角色失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 	}
 	response.OkWithMsg(c, "更新角色成功！")

@@ -12,7 +12,6 @@ import (
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -43,7 +42,7 @@ func JWT() *jwt.GinJWTMiddleware {
 			var user model.User
 			err := global.DB.Where("username = ? and password = ?", req.Username, utils.MD5(req.Password)).First(&user).Error
 			if err != nil {
-				global.LOG.Error("登录失败！", zap.Any("err", err))
+				global.LOG.Errorf("登录失败：%v", err)
 				return nil, jwt.ErrFailedAuthentication
 			}
 			return &model.User{Username: user.Username}, nil
@@ -68,11 +67,11 @@ func JWT() *jwt.GinJWTMiddleware {
 		},
 	})
 	if err != nil {
-		global.LOG.Error("JWT", zap.Any("err", err))
+		global.LOG.Errorf("JWT: %v", err)
 	}
 	errInit := authMiddleware.MiddlewareInit()
 	if errInit != nil {
-		global.LOG.Error("MiddlewareInit", zap.Any("err", errInit))
+		global.LOG.Errorf("MiddlewareInit: %v", errInit)
 	}
 	return authMiddleware
 }
@@ -100,7 +99,7 @@ func GroupAuthorizator(role string) gin.HandlerFunc {
 		} else {
 			_ = json.Unmarshal([]byte(val), &user)
 		}
-		global.LOG.Info("【认证用户】", zap.Any("user", user))
+		global.LOG.Infof("认证用户：%v", user)
 		if role == user.Role {
 			c.Next()
 			return

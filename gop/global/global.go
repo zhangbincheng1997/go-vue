@@ -15,7 +15,7 @@ import (
 // 全局变量
 var (
 	CONFIG config.Config
-	LOG    *zap.Logger
+	LOG    *zap.SugaredLogger
 	DB     *gorm.DB
 	RDB    *redis.Client
 	MGO    *mongo.Database

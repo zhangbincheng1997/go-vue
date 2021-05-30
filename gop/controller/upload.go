@@ -6,7 +6,6 @@ import (
 	"main/service"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // UploadFile ...
@@ -26,7 +25,7 @@ func UploadFile(c *gin.Context) {
 	}
 	url, err := service.Upload(file) // 文件上传后拿到文件路径
 	if err != nil {
-		global.LOG.Error("上传失败！", zap.Any("err", err))
+		global.LOG.Errorf("上传失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}

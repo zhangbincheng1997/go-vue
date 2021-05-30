@@ -14,7 +14,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 )
 
 const idGenerator = "id_generator"
@@ -25,7 +24,7 @@ func getNextID(collection string) int {
 	update := bson.M{"$inc": bson.M{"id": 1}}
 	opts := options.FindOneAndUpdate().SetUpsert(true)
 	if err := global.MGO.Collection(idGenerator).FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&generator); err != nil {
-		global.LOG.Error("生成ID失败！！！", zap.Any("err", err))
+		global.LOG.Errorf("生成ID失败：%v", err)
 		panic(err)
 	}
 	return generator.ID

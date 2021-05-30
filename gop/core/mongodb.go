@@ -8,7 +8,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/zap"
 )
 
 // MongoDB ...
@@ -19,10 +18,10 @@ func MongoDB() *mongo.Database {
 	uri := fmt.Sprintf("mongodb://%s", cfg.Addr)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		global.LOG.Error("MongoDB连接失败！", zap.Any("err", err))
+		global.LOG.Errorf("MongoDB连接失败：%v", err)
 		return nil
 	}
 	mgo := client.Database(cfg.Database)
-	global.LOG.Info("MongoDB连接成功！", zap.String("uri", uri))
+	global.LOG.Infof("MongoDB连接成功：%v", uri)
 	return mgo
 }

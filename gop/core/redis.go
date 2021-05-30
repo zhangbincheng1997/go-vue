@@ -4,7 +4,6 @@ import (
 	"main/global"
 
 	"github.com/go-redis/redis"
-	"go.uber.org/zap"
 )
 
 // Redis ...
@@ -15,11 +14,11 @@ func Redis() *redis.Client {
 		Password: cfg.Password, // no password set
 		DB:       cfg.DB,       // use default DB
 	})
-	pong, err := client.Ping().Result()
+	_, err := client.Ping().Result()
 	if err != nil {
-		global.LOG.Error("Redis连接失败！", zap.Any("err", err))
+		global.LOG.Errorf("Redis连接失败：%v", err)
 		return nil
 	}
-	global.LOG.Info("Redis连接成功！", zap.String("pong", pong))
+	global.LOG.Infof("Redis连接成功：%v", cfg.Addr)
 	return client
 }

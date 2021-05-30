@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"main/global"
 
-	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -28,9 +27,9 @@ func MySQL() *gorm.DB {
 	}
 	db, err := gorm.Open(dialector, config)
 	if err != nil {
-		global.LOG.Error("MySQL连接失败！", zap.Any("err", err))
+		global.LOG.Errorf("MySQL连接失败：%v", err)
 		return nil
 	}
-	global.LOG.Info("MySQL连接成功！", zap.Any("dbDSN", dbDSN))
+	global.LOG.Infof("MySQL连接成功：%v", dbDSN)
 	return db
 }

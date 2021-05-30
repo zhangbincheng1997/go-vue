@@ -10,7 +10,6 @@ import (
 	"path"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // GetStatusOptions ...
@@ -39,7 +38,7 @@ func GetItemList(c *gin.Context) {
 	}
 	list, count, err := service.GetItemList(req)
 	if err != nil {
-		global.LOG.Error("获取条目列表失败！", zap.Any("err", err))
+		global.LOG.Errorf("获取条目列表失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -66,7 +65,7 @@ func UpdateText(c *gin.Context) {
 	}
 	err := service.UpdateText(req)
 	if err != nil {
-		global.LOG.Error("更新条目失败！", zap.Any("err", err))
+		global.LOG.Errorf("更新条目失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -90,7 +89,7 @@ func UpdateRecordText(c *gin.Context) {
 	}
 	err := service.UpdateRecordText(req)
 	if err != nil {
-		global.LOG.Error("更新条目翻译失败！", zap.Any("err", err))
+		global.LOG.Errorf("更新条目翻译失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -114,7 +113,7 @@ func UpdateStatus(c *gin.Context) {
 	}
 	err := service.UpdateStatus(req)
 	if err != nil {
-		global.LOG.Error("更新条目状态失败！", zap.Any("err", err))
+		global.LOG.Errorf("更新条目状态失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -138,7 +137,7 @@ func DeleteItem(c *gin.Context) {
 	}
 	err := service.DeleteItem(req)
 	if err != nil {
-		global.LOG.Error("删除条目状态失败！", zap.Any("err", err))
+		global.LOG.Errorf("删除条目状态失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -160,7 +159,7 @@ func ImportData(c *gin.Context) {
 	table := c.Request.FormValue("table")
 	err := service.ImportData(file, table)
 	if err != nil {
-		global.LOG.Error("导入数据失败！", zap.Any("err", err))
+		global.LOG.Errorf("导入数据失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -183,7 +182,7 @@ func ExportData(c *gin.Context) {
 
 	err := service.ExportData(filename, table, language)
 	if err != nil {
-		global.LOG.Error("导出数据失败！", zap.Any("err", err))
+		global.LOG.Errorf("导出数据失败：%v", err)
 		response.FailWithMsg(c, err.Error())
 		return
 	}

@@ -11,21 +11,20 @@ jwt:
   timeout: 24
 
 mysql:
+  addr: '120.79.157.49:3306'
   username: 'root'
-  password: 'Zhangbincheng0'
+  password: '123456'
   protocal: 'tcp'
-  addr: 'www.littleredhat1997.com:3306'
-  config: 'charset=utf8mb4&parseTime=True&loc=Local'
   database: 'test'
+  config: 'charset=utf8mb4&parseTime=True&loc=Local'
 
 redis:
-  addr: 'www.littleredhat1997.com:6379'
-  password: 'Zhangbincheng0'
+  addr: '39.107.29.66:6379'
+  password: 'cc123/.,'
   db: 0
 
 mongodb:
   addr: '120.79.157.49:27017'
-  password: 'Zhangbincheng0'
   database: 'test'
 
 qiniu:

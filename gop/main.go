@@ -6,6 +6,8 @@ import (
 	"main/core"
 	"main/global"
 	"main/middleware"
+	"main/model"
+	"main/utils"
 
 	_ "main/docs"
 
@@ -28,6 +30,8 @@ func main() {
 	global.RDB = core.Redis()
 	global.MGO = core.MongoDB()
 	authMiddleware := core.JWT()
+
+	initDB()
 
 	r := gin.Default()
 	r.Use(gin.Logger())
@@ -79,7 +83,30 @@ func main() {
 		}
 	}
 
+	// swag init
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // http://localhost:8080/swagger/index.html
 
 	r.Run(":8080")
+}
+
+func initDB() {
+	allModels := []interface{}{&model.User{}}
+
+	if err := global.DB.AutoMigrate(allModels...); err != nil {
+		global.LOG.Errorf("Failed to AutoMigrate: %v", err)
+	}
+
+	for _, m := range allModels {
+		if !global.DB.Migrator().HasTable(m) {
+			global.LOG.Errorf("Failed to HasTable %#v", m)
+		}
+	}
+
+	users := []model.User{
+		{Username: "admin", Password: utils.MD5("111111"), Role: constant.ADMIN},
+		{Username: "111111", Password: utils.MD5("111111"), Role: constant.GUEST},
+	}
+	if err := global.DB.Create(&users).Error; err != nil {
+		global.LOG.Errorf("Failed to Create: %v", err)
+	}
 }
